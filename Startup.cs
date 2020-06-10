@@ -1,15 +1,11 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+using CheckinPPP.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace CheckinPPP
 {
@@ -25,7 +21,31 @@ namespace CheckinPPP
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            services.AddDbContext<ApplicationDbContext>(options =>
+            {
+                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+            });
+
+            var clientUrl = Configuration.GetSection("ClientUrl").Value;
+
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(options =>
+               {
+                   options.WithOrigins(clientUrl);
+                   options.AllowAnyMethod();
+                   options.AllowAnyHeader();
+               });
+            });
+
             services.AddControllers();
+            services.Configure<ApiBehaviorOptions>(options =>
+            {
+                options.SuppressInferBindingSourcesForParameters = true;
+                options.SuppressMapClientErrors = true;
+                options.SuppressConsumesConstraintForFormFileParameters = true;
+                options.SuppressModelStateInvalidFilter = true;
+            });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -39,6 +59,8 @@ namespace CheckinPPP
             app.UseHttpsRedirection();
 
             app.UseRouting();
+
+            app.UseCors();
 
             app.UseAuthorization();
 
