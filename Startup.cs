@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using CheckinPPP.Data;
 
 namespace CheckinPPP
 {
@@ -42,6 +43,7 @@ namespace CheckinPPP
                    options.WithOrigins(clientUrl);
                    options.AllowAnyMethod();
                    options.AllowAnyHeader();
+                   options.AllowCredentials(); // for signalR
                });
             });
 

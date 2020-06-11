@@ -9,6 +9,6 @@ namespace CheckinPPP.Hubs
     public interface IPreciousPeopleClient
     {
         // methods that will be called on the client, client must implement this methods
-        Task<CheckedInMemberDTO> UpdateCheckedInMembers(CheckedInMemberDTO checkedInMembers);
+        Task UpdateCheckedInMembers(CheckedInMemberDTO checkedInMembers);
     }
 }

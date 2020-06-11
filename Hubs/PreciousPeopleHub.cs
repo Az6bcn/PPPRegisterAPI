@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace CheckinPPP.Hubs
 {
     // methods that will be called by the client.
-    public class PreciousPeopleHub: Hub<IPreciousPeopleClient>
+    public class PreciousPeopleHub : Hub<IPreciousPeopleClient>
     {
 
         public async Task UpdateCheckedInMemebers(CheckedInMemberDTO checkedInMembers)
