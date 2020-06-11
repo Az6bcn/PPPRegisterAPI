@@ -43,8 +43,6 @@ namespace CheckinPPP.Controllers
             return BadRequest();
         }
 
-
-
         private Member ParseToMember(CheckIn checkinData)
         {
             var member = new Member
