@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace CheckinPPP.DTOs
 {
-    public class CheckedInMembersDTO
+    public class CheckedInMemberDTO
     {
         public string Name { get; set; }
         public string Surname { get; set; }

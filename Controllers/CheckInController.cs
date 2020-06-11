@@ -4,8 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using CheckinPPP.Data;
 using CheckinPPP.Data.Entities;
+using CheckinPPP.DTOs;
+using CheckinPPP.Hubs;
 using CheckinPPP.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -16,9 +19,12 @@ namespace CheckinPPP.Controllers
     public class CheckInController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        public CheckInController(ApplicationDbContext context)
+        private IHubContext<PreciousPeopleHub, IPreciousPeopleClient> _hubContext { get; }
+
+        public CheckInController(ApplicationDbContext context, IHubContext<PreciousPeopleHub, IPreciousPeopleClient> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         [HttpPost]
@@ -37,6 +43,8 @@ namespace CheckinPPP.Controllers
 
             if (result > 0)
             {
+                var checkedInMember = ParseToCheckedInMemeberDTO(member);
+                await _hubContext.Clients.All.UpdateCheckedInMembers(checkedInMember);
                 return Ok();
             }
 
@@ -53,6 +61,19 @@ namespace CheckinPPP.Controllers
             };
 
             return member;
+        }
+
+        private CheckedInMemberDTO ParseToCheckedInMemeberDTO(Member member)
+        {
+            var checkedInMember = new CheckedInMemberDTO
+            {
+                Name = member.Name,
+                Surname = member.Surname,
+                Mobile = member.Mobile,
+                CheckedInAt = member.CreatedAt
+            };
+
+            return checkedInMember;
         }
     }
 }
