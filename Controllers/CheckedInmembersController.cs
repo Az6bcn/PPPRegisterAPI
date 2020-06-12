@@ -38,7 +38,7 @@ namespace CheckinPPP.Controllers
         public async Task<IActionResult> GetAllRecordsUpToSpecifiedDate(DateTime date)
         {
             var result = await _context.Set<Member>()
-                .Where(x => x.CreatedAt.Date <= date.Date)
+                .Where(x => x.CreatedAt.Date == date.Date)
                 .ToListAsync();
 
             var mappedResult = ParseToCheckedInMemeberDTO(result);
