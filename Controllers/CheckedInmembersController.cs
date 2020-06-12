@@ -38,7 +38,7 @@ namespace CheckinPPP.Controllers
         public async Task<IActionResult> GetAllRecordsUpToSpecifiedDate(DateTime date)
         {
             var result = await _context.Set<Member>()
-                .Where(x => x.CreatedAt <= date)
+                .Where(x => x.CreatedAt.Date <= date.Date)
                 .ToListAsync();
 
             var mappedResult = ParseToCheckedInMemeberDTO(result);
@@ -46,11 +46,11 @@ namespace CheckinPPP.Controllers
             return Ok(mappedResult);
         }
 
-        [HttpGet("/{dateFrom}/{dateTo}")]
+        [HttpGet("{dateFrom}/{dateTo}")]
         public async Task<IActionResult> GetAllRecordsUpToSpecifiedDate(DateTime dateFrom, DateTime dateTo)
         {
             var result = await _context.Set<Member>()
-                .Where(x => x.CreatedAt >= dateFrom && x.CreatedAt <= dateTo)
+                .Where(x => x.CreatedAt.Date >= dateFrom.Date && x.CreatedAt.Date <= dateTo.Date)
                 .ToListAsync();
 
             var mappedResult = ParseToCheckedInMemeberDTO(result);
@@ -73,7 +73,7 @@ namespace CheckinPPP.Controllers
                         CheckedInAt = member.CreatedAt
                     });
             }
-           
+
 
             return checkedInMembers;
         }
