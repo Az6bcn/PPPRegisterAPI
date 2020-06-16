@@ -40,6 +40,9 @@ namespace CheckinPPP
                });
             });
 
+            // Automatically perform database migration (Azure)
+            services.BuildServiceProvider().GetService<ApplicationDbContext>().Database.Migrate();
+
             services.AddSignalR(hubOptions =>
             {
                 hubOptions.EnableDetailedErrors = true;
@@ -71,8 +74,15 @@ namespace CheckinPPP
 
             app.UseAuthorization();
 
+            // set default homepage to index.html of the compiled Angular app
+            app.UseDefaultFiles();
+
+            //serve static file: to serve built Angular app in wwwwrooot
+            app.UseStaticFiles();
+
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapFallbackToController("index", "Fallback");
                 endpoints.MapHub<PreciousPeopleHub>("/ppphub");
                 endpoints.MapControllers();
             });
