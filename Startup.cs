@@ -7,6 +7,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using CheckinPPP.Data;
+using Microsoft.Extensions.Logging;
+using System.Linq;
 
 namespace CheckinPPP
 {
@@ -31,17 +33,19 @@ namespace CheckinPPP
 
             services.AddCors(options =>
             {
-                options.AddDefaultPolicy(options =>
+                options.AddPolicy("myPolicy", builder =>
                {
-                   options.WithOrigins(clientUrl);
-                   options.AllowAnyMethod();
-                   options.AllowAnyHeader();
-                   options.AllowCredentials(); // for signalR
+                   builder.WithOrigins(clientUrl);
+                   builder.AllowAnyMethod();
+                   builder.AllowAnyHeader();
+                   builder.AllowCredentials(); // for signalR
                });
             });
 
+
             // Automatically perform database migration (Azure)
-            services.BuildServiceProvider().GetService<ApplicationDbContext>().Database.Migrate();
+            //services.BuildServiceProvider().GetService<ApplicationDbContext>().Database.Migrate();
+            MigrateDatabase(services);
 
             services.AddSignalR(hubOptions =>
             {
@@ -70,7 +74,7 @@ namespace CheckinPPP
 
             app.UseRouting();
 
-            app.UseCors();
+            app.UseCors("myPolicy");
 
             app.UseAuthorization();
 
@@ -86,6 +90,34 @@ namespace CheckinPPP
                 endpoints.MapHub<PreciousPeopleHub>("/ppphub");
                 endpoints.MapControllers();
             });
+        }
+
+
+        private void MigrateDatabase(IServiceCollection services)
+        {
+            // build the serviceCollection, returns IServiceProvider, which is used to resolve services
+            using (var serviceProvider = services.BuildServiceProvider())
+            {
+                // create a scope where all my operations will run in.
+                using (var scope = serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope())
+                {
+                    // resolve the dependencies I need
+                    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Startup>>();
+
+                    logger.LogInformation("Getting Pending Migrations");
+                    var pendingMigrations = context.Database.GetPendingMigrations();
+
+                    if (pendingMigrations.Any()) { 
+                        logger.LogInformation("Ready to apply migration to  Database");
+                        context.Database.Migrate();
+                        logger.LogInformation("Migrated Database");
+                    }
+
+                    logger.LogInformation("No Pending Migrations");
+                }
+
+            }
         }
     }
 }
