@@ -13,6 +13,7 @@ namespace CheckinPPP.Data
         }
 
         DbSet<Member> Members { get; set; }
+        DbSet<Booking> Bookings { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

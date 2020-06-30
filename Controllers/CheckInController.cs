@@ -44,7 +44,7 @@ namespace CheckinPPP.Controllers
             if (result > 0)
             {
                 var checkedInMember = ParseToCheckedInMemeberDTO(member);
-                await _hubContext.Clients.All.UpdateCheckedInMembers(checkedInMember);
+                await _hubContext.Clients.All.UpdateCheckedInMembersAsync(checkedInMember);
                 return Ok();
             }
 

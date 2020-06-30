@@ -9,6 +9,9 @@ using Microsoft.Extensions.Hosting;
 using CheckinPPP.Data;
 using Microsoft.Extensions.Logging;
 using System.Linq;
+using CheckinPPP.Helpers;
+using CheckinPPP.Data.Entities;
+using Newtonsoft.Json;
 
 namespace CheckinPPP
 {
@@ -47,12 +50,20 @@ namespace CheckinPPP
             //services.BuildServiceProvider().GetService<ApplicationDbContext>().Database.Migrate();
             MigrateDatabase(services);
 
+            SeedServiceDatas(services);
+
             services.AddSignalR(hubOptions =>
             {
                 hubOptions.EnableDetailedErrors = true;
             });
 
-            services.AddControllers();
+            services.AddControllers()
+                .AddNewtonsoftJson(options =>
+                {
+                    // all dates must be in ISODate format
+                    options.SerializerSettings.DateFormatString = "yyyy-MM-ddTHH:mm:ssZ";
+                });
+
             services.Configure<ApiBehaviorOptions>(options =>
             {
                 options.SuppressInferBindingSourcesForParameters = true;
@@ -86,7 +97,7 @@ namespace CheckinPPP
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapFallbackToController("index", "Fallback");
+                //endpoints.MapFallbackToController("index", "Fallback");
                 endpoints.MapHub<PreciousPeopleHub>("/ppphub");
                 endpoints.MapControllers();
             });
@@ -108,15 +119,45 @@ namespace CheckinPPP
                     logger.LogInformation("Getting Pending Migrations");
                     var pendingMigrations = context.Database.GetPendingMigrations();
 
-                    if (pendingMigrations.Any()) { 
+                    if (pendingMigrations.Any())
+                    {
                         logger.LogInformation("Ready to apply migration to  Database");
                         context.Database.Migrate();
                         logger.LogInformation("Migrated Database");
                     }
-
                     logger.LogInformation("No Pending Migrations");
                 }
+            }
+        }
 
+        private void SeedServiceDatas(IServiceCollection services)
+        {
+            // build the serviceCollection, returns IServiceProvider, which is used to resolve services
+            using (var serviceProvider = services.BuildServiceProvider())
+            {
+                // create a scope where all my operations will run in.
+                using (var scope = serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope())
+                {
+                    // resolve the dependencies I need
+                    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Startup>>();
+
+                    var bookings = context.Set<Booking>().ToList();
+
+                    logger.LogInformation("Prepairing to seed data .....");
+
+                    if (bookings.Count() == 0)
+                    {
+                        context.AddRange(SeedFirstService.FirstServiceBookingData());
+                        context.AddRange(SeedSecondService.SeedSecondServiceBookingData());
+                        context.AddRange(SeedWorkersService.SeedWorkersServiceBookingData());
+
+                        context.SaveChanges();
+                        logger.LogInformation("Seeded");
+                    }
+
+                    logger.LogInformation("Nothing to Seed");
+                }
             }
         }
     }

@@ -8,6 +8,7 @@ using CheckinPPP.DTOs;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 
 namespace CheckinPPP.Controllers
 {
@@ -58,6 +59,52 @@ namespace CheckinPPP.Controllers
             return Ok(mappedResult);
         }
 
+        [HttpPost("{signIn}/{id}/{date}")]
+        public async Task<IActionResult> SigIn([FromBody] SignInOutDTO data)
+        {
+            if (data.Id <= 0) { return BadRequest(); }
+
+            var result = await _context.Set<Booking>()
+                .Where(x => x.Id == data.Id
+                    && x.Date.Date == data.date.Date
+                    && x.ServiceId == data.ServiceId
+                    && x.Time == data.Time)
+                .FirstOrDefaultAsync();
+
+            if (result is null) { return BadRequest(); }
+
+            result.SignIn = DateTime.Now;
+
+            _context.Update(result);
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
+        [HttpPost("{signOut}/{id}")]
+        public async Task<IActionResult> SignOut([FromBody] SignInOutDTO data)
+        {
+            if (data.Id <= 0) { return BadRequest(); }
+
+            var result = await _context.Set<Booking>()
+                .Where(x => x.Id == data.Id
+                    && x.Date.Date == data.date.Date
+                    && x.ServiceId == data.ServiceId
+                    && x.Time == data.Time)
+                .FirstOrDefaultAsync();
+
+            if (result is null) { return BadRequest(); }
+
+            result.SignOut = DateTime.Now;
+
+            _context.Update(result);
+
+            await _context.SaveChangesAsync();
+
+            return Ok();
+        }
+
         private List<CheckedInMemberDTO> ParseToCheckedInMemeberDTO(List<Member> members)
         {
             var checkedInMembers = new List<CheckedInMemberDTO>();
@@ -73,7 +120,6 @@ namespace CheckinPPP.Controllers
                         CheckedInAt = member.CreatedAt
                     });
             }
-
 
             return checkedInMembers;
         }
