@@ -27,7 +27,10 @@ namespace CheckinPPP.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAllRecords()
         {
-            var result = await _context.Set<Member>().ToListAsync();
+            var result = await _context.Set<Booking>()
+                .Include(x => x.Member)
+                .Where(x => x.MemberId != null)
+                .ToListAsync();
 
             var mappedResult = ParseToCheckedInMemeberDTO(result);
 
@@ -38,8 +41,10 @@ namespace CheckinPPP.Controllers
         [HttpGet("{date}")]
         public async Task<IActionResult> GetAllRecordsUpToSpecifiedDate(DateTime date)
         {
-            var result = await _context.Set<Member>()
-                .Where(x => x.CreatedAt.Date == date.Date)
+            var result = await _context.Set<Booking>()
+                .Include(x => x.Member)
+                .Where(x => x.Date.Date == date.Date
+                    && x.MemberId != null)
                 .ToListAsync();
 
             var mappedResult = ParseToCheckedInMemeberDTO(result);
@@ -50,8 +55,11 @@ namespace CheckinPPP.Controllers
         [HttpGet("{dateFrom}/{dateTo}")]
         public async Task<IActionResult> GetAllRecordsUpToSpecifiedDate(DateTime dateFrom, DateTime dateTo)
         {
-            var result = await _context.Set<Member>()
-                .Where(x => x.CreatedAt.Date >= dateFrom.Date && x.CreatedAt.Date <= dateTo.Date)
+            var result = await _context.Set<Booking>()
+                 .Include(x => x.Member)
+                .Where(x => x.Date.Date >= dateFrom.Date
+                    && x.Date.Date <= dateTo.Date
+                    && x.MemberId != null)
                 .ToListAsync();
 
             var mappedResult = ParseToCheckedInMemeberDTO(result);
@@ -105,22 +113,25 @@ namespace CheckinPPP.Controllers
             return Ok();
         }
 
-        private List<CheckedInMemberDTO> ParseToCheckedInMemeberDTO(List<Member> members)
+        private List<CheckedInMemberDTO> ParseToCheckedInMemeberDTO(List<Booking> bookings)
         {
             var checkedInMembers = new List<CheckedInMemberDTO>();
 
-            foreach (var member in members)
+            foreach (var booking in bookings)
             {
                 checkedInMembers.Add(
                     new CheckedInMemberDTO
                     {
-                        Name = member.Name,
-                        Surname = member.Surname,
-                        Mobile = member.Mobile,
-                        CheckedInAt = member.CreatedAt
+                        Name = booking.Member.Name,
+                        Surname = booking.Member.Surname,
+                        Mobile = booking.Member.Mobile,
+                        ServiceId = booking.ServiceId,
+                        SignedIn = booking.SignIn,
+                        SignedOut = booking.SignOut,
+                        Date = booking.Date,
+                        Time = booking.Time
                     });
             }
-
             return checkedInMembers;
         }
     }

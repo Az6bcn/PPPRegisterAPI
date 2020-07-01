@@ -69,8 +69,7 @@ namespace CheckinPPP.Controllers
             {
                 Name = member.Name,
                 Surname = member.Surname,
-                Mobile = member.Mobile,
-                CheckedInAt = member.CreatedAt
+                Mobile = member.Mobile
             };
 
             return checkedInMember;
