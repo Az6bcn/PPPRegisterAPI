@@ -47,6 +47,11 @@ namespace CheckinPPP.Hubs
             await Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate);
         }
 
+        public async Task UpdateSlotsAvailable(DateTime date)
+        {
+
+            await Clients.All.UpdateSlotsAvailableAsync(date);
+        }
 
         private List<BookingDTO> MapToBookingDTO(List<Booking> bookings)
         {
