@@ -10,6 +10,6 @@ namespace CheckinPPP.Hubs
     {
         // methods that will be called on the client, client must implement this methods
         Task UpdateCheckedInMembersAsync(CheckedInMemberDTO checkedInMembers);
-        Task ReceivedBookingsUpdateAsync(List<BookingDTO> availableBookings);
+        Task ReceivedBookingsUpdateAsync(BookingsUpdateSignalR availableBookings);
     }
 }

@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 using CheckinPPP.Data;
 using CheckinPPP.Data.Entities;
 using CheckinPPP.DTOs;
+using CheckinPPP.Hubs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -17,10 +19,12 @@ namespace CheckinPPP.Controllers
     public class BookingController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private IHubContext<PreciousPeopleHub, IPreciousPeopleClient> _hubContext { get; }
 
-        public BookingController(ApplicationDbContext context)
+        public BookingController(ApplicationDbContext context, IHubContext<PreciousPeopleHub, IPreciousPeopleClient> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
         [HttpGet("{serviceId}/{date}/{time}")]
@@ -50,12 +54,17 @@ namespace CheckinPPP.Controllers
             {
                 var groupBookingResponse = await GroupBooking(booking);
 
+                var bookingsUpdate = await GetBookingsUpdate(booking.ServiceId, booking.Date, booking.Time);
+                await _hubContext.Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate);
+
                 return Ok(groupBookingResponse);
             }
 
             // single booking: check select booking still available or any available
-
             var singleBookingResponse = await SingleBooking(booking);
+
+            var bookingsUpdate2 = await GetBookingsUpdate(booking.ServiceId, booking.Date, booking.Time);
+            await _hubContext.Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate2);
 
             return Ok(singleBookingResponse);
         }
@@ -81,10 +90,10 @@ namespace CheckinPPP.Controllers
 
                 var members = MapToMembers(booking);
                 var groupId = Guid.NewGuid();
-
+                var i = 0;
                 foreach (var _booking in response)
                 {
-                    var i = 0;
+
                     _booking.Member = members[i];
                     _booking.GroupLinkId = groupId;
 
@@ -205,6 +214,27 @@ namespace CheckinPPP.Controllers
             }
 
             return dto;
+        }
+
+        private async Task<BookingsUpdateSignalR> GetBookingsUpdate(int serviceId, DateTime date, string time)
+        {
+            var bookings = await _context.Set<Booking>()
+                .Where(x => x.ServiceId == serviceId
+                    && x.Date.Date == date.Date
+                    && x.Time == time)
+                .ToListAsync();
+
+            var availableBookings = bookings
+                .Where(x => x.MemberId == null)
+                .ToList();
+
+            var bookingsUpdate = new BookingsUpdateSignalR
+            {
+                Total = bookings.Count(),
+                AvailableBookings = availableBookings.Count()
+            };
+
+            return bookingsUpdate;
         }
     }
 }

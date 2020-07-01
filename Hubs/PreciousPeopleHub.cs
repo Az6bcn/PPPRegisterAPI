@@ -27,14 +27,24 @@ namespace CheckinPPP.Hubs
         // client to call this method to get booking update
         public async Task GetBookingsUpdate(int serviceId, DateTime date, string time)
         {
-            var availableBookings = await _context.Set<Booking>()
+            var bookings = await _context.Set<Booking>()
                 .Where(x => x.ServiceId == serviceId
                     && x.Date.Date == date.Date
                     && x.Time == time)
                 .ToListAsync();
 
+            var availableBookings = bookings
+                .Where(x => x.MemberId == null)
+                .ToList();
+
+            var bookingsUpdate = new BookingsUpdateSignalR
+            {
+                Total = bookings.Count(),
+                AvailableBookings = availableBookings.Count()
+            };
+
             // send available book to all clients: client need to implement ReceivedBookingsUpdateAsync to receive updates
-            await Clients.All.ReceivedBookingsUpdateAsync(MapToBookingDTO(availableBookings));
+            await Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate);
         }
 
 
