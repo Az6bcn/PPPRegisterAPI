@@ -29,7 +29,8 @@ namespace CheckinPPP.Controllers
         {
             var result = await _context.Set<Booking>()
                 .Include(x => x.Member)
-                .Where(x => x.MemberId != null)
+                .Where(x => x.MemberId != null
+                    && x.SignIn != null)
                 .ToListAsync();
 
             var mappedResult = ParseToCheckedInMemeberDTO(result);
@@ -67,7 +68,7 @@ namespace CheckinPPP.Controllers
             return Ok(mappedResult);
         }
 
-        [HttpPost("{signIn}/{id}/{date}")]
+        [HttpPost("signIn/{id}")]
         public async Task<IActionResult> SigIn([FromBody] SignInOutDTO data)
         {
             if (data.Id <= 0) { return BadRequest(); }
@@ -87,10 +88,10 @@ namespace CheckinPPP.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok();
+            return Ok(MapToSignInOutResponseDTO(result, true));
         }
 
-        [HttpPost("{signOut}/{id}")]
+        [HttpPost("signOut/{id}")]
         public async Task<IActionResult> SignOut([FromBody] SignInOutDTO data)
         {
             if (data.Id <= 0) { return BadRequest(); }
@@ -110,7 +111,7 @@ namespace CheckinPPP.Controllers
 
             await _context.SaveChangesAsync();
 
-            return Ok();
+            return Ok(MapToSignInOutResponseDTO(result));
         }
 
         private List<CheckedInMemberDTO> ParseToCheckedInMemeberDTO(List<Booking> bookings)
@@ -122,6 +123,7 @@ namespace CheckinPPP.Controllers
                 checkedInMembers.Add(
                     new CheckedInMemberDTO
                     {
+                        Id = booking.Id,
                         Name = booking.Member.Name,
                         Surname = booking.Member.Surname,
                         Mobile = booking.Member.Mobile,
@@ -133,6 +135,31 @@ namespace CheckinPPP.Controllers
                     });
             }
             return checkedInMembers;
+        }
+
+
+        private SignInOutResponseDTO MapToSignInOutResponseDTO(Booking booking, bool isSignIn = false)
+        {
+            SignInOutResponseDTO response;
+
+            if (isSignIn)
+            {
+                response = new SignInOutResponseDTO
+                {
+                    Id = booking.Id,
+                    Date = (DateTime)booking.SignIn
+                };
+
+                return response;
+            }
+
+            response = new SignInOutResponseDTO
+            {
+                Id = booking.Id,
+                Date = (DateTime)booking.SignOut
+            };
+
+            return response;
         }
     }
 }
