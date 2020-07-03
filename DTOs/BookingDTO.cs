@@ -15,5 +15,7 @@ namespace CheckinPPP.DTOs
         public Guid? GroupLinkId { get; set; }
         public MemberDTO Member { get; set; }
         public List<MemberDTO> Members { get; set; }
+        public string Mobile { get; set; }
+        public string EmailAddress { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -27,19 +27,32 @@ namespace CheckinPPP.Controllers
             _hubContext = hubContext;
         }
 
-        [HttpGet("{serviceId}/{date}/{time}")]
-        public async Task<IActionResult> GetAvailableBookings(int serviceId, DateTime date, string time)
+        //[HttpGet("{serviceId}/{date}/{time}")]
+        //public async Task<IActionResult> GetAvailableBookings(int serviceId, DateTime date, string time)
+        //{
+        //    var availableBookings = await _context.Set<Booking>()
+        //        .Where(x => x.ServiceId == serviceId
+        //            && x.Date.Date == date.Date
+        //            && x.Time == time
+        //            && x.MemberId == null)
+        //        .ToListAsync();
+
+        //    var availableBookingsDTO = MapToBookingDTO(availableBookings);
+
+        //    return Ok(availableBookingsDTO);
+        //}
+
+        [HttpGet("{date}")]
+        public async Task<IActionResult> GetAvailableBookings(DateTime date)
         {
             var availableBookings = await _context.Set<Booking>()
-                .Where(x => x.ServiceId == serviceId
-                    && x.Date.Date == date.Date
-                    && x.Time == time
+                .Where(x => x.Date.Date == date.Date
                     && x.MemberId == null)
                 .ToListAsync();
 
-            var availableBookingsDTO = MapToBookingDTO(availableBookings);
+            var availableSlotsDTO = MapToSlotDTO(availableBookings);
 
-            return Ok(availableBookingsDTO);
+            return Ok(availableSlotsDTO);
         }
 
         [HttpPost]
@@ -80,16 +93,17 @@ namespace CheckinPPP.Controllers
                 .Where(x => x.MemberId == null
                     && x.Date.Date == booking.Date.Date
                     && x.Time == booking.Time)
-                .Take(booking.TotalNumberBookings)
+                .Take(booking.Members.Count)
                 .ToListAsync();
 
-                if (response.Count() != booking.TotalNumberBookings)
+                if (response.Count() != booking.Members.Count)
                 {
                     return new List<Booking>();
                 }
 
                 var members = MapToMembers(booking);
                 var groupId = Guid.NewGuid();
+
                 var i = 0;
                 foreach (var _booking in response)
                 {
@@ -103,7 +117,7 @@ namespace CheckinPPP.Controllers
                 _context.UpdateRange(response);
                 var numbersUpdated = await _context.SaveChangesAsync();
 
-                if (numbersUpdated == (booking.TotalNumberBookings * 2))
+                if (numbersUpdated == (booking.Members.Count * 2))
                 {
                     await transaction.CommitAsync();
                     return response;
@@ -131,7 +145,8 @@ namespace CheckinPPP.Controllers
                 .Where(x => x.MemberId == null
                     && x.Date.Date == booking.Date.Date
                     && x.Time == booking.Time
-                    && x.Id == booking.Id)
+                    //&& x.Id == booking.Id)
+                    )
                 .FirstOrDefaultAsync();
 
                 var member = MapToMember(booking);
@@ -170,7 +185,9 @@ namespace CheckinPPP.Controllers
             {
                 Name = bookingDTO.Member.Name,
                 Surname = bookingDTO.Member.Surname,
-                Mobile = bookingDTO.Member.Mobile
+                Gender = bookingDTO.Member.Gender,
+                Mobile = bookingDTO.Mobile,
+                EmailAddress = bookingDTO.EmailAddress
             };
 
             return member;
@@ -187,7 +204,9 @@ namespace CheckinPPP.Controllers
                     {
                         Name = member.Name,
                         Surname = member.Surname,
-                        Mobile = member.Mobile
+                        Gender = member.Gender,
+                        Mobile = bookingDTO.Mobile,
+                        EmailAddress = bookingDTO.EmailAddress
                     }
                );
             }
@@ -211,6 +230,33 @@ namespace CheckinPPP.Controllers
                         Time = booking.Time
                     }
                 );
+            }
+
+            return dto;
+        }
+
+        private List<SlotDTO> MapToSlotDTO(List<Booking> bookings)
+        {
+            var dto = new List<SlotDTO>();
+            var services = new List<string>();
+            services.Add("08:30");
+            services.Add("10:10");
+            services.Add("11:50");
+
+            foreach(var service in services)
+            {
+                dto.Add(
+                    new SlotDTO
+                    {
+                        Time = service,
+                        AvailableSlots = 0
+                    }
+                );
+            }
+
+            foreach (var slot in dto)
+            {
+                slot.AvailableSlots = bookings.Where(x => x.Time == slot.Time).Count();
             }
 
             return dto;
