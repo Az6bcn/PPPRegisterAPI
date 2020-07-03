@@ -11,7 +11,6 @@ namespace CheckinPPP.Business
         Task<Booking> SingleBookingAsync(BookingDTO booking);
         Task<List<Booking>> GroupBookingAsync(BookingDTO booking);
         Task<BookingsUpdateSignalR> GetBookingsUpdateAsync(int serviceId, DateTime date, string time);
-        List<SlotDTO> MapToSlotDTO(IEnumerable<Booking> bookings);
         IEnumerable<BookingDTO> MapToBookingDTO(IEnumerable<Booking> bookings);
     }
 }

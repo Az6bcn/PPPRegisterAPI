@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using CheckinPPP.Business;
 using CheckinPPP.Data.Queries;
@@ -6,6 +7,7 @@ using CheckinPPP.DTOs;
 using CheckinPPP.Hubs;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -47,9 +49,17 @@ namespace CheckinPPP.Controllers
         {
             var availableBookings = await _bookingQueries.GetAvailableBookingsAsync(date);
 
-            var availableSlotsDTO = _bookingBusiness.MapToSlotDTO(availableBookings);
+            var grouped = availableBookings
+                .GroupBy(x => x.ServiceId)
+                .Select(x => new SlotDTO
+                {
+                    ServiceId = x.Key,
+                    Time = x.Select(y => y.Time).FirstOrDefault(),
+                    AvailableSlots = x.Count()
+                });
 
-            return Ok(availableSlotsDTO);
+            return Ok(grouped);
+
         }
 
         [HttpPost]

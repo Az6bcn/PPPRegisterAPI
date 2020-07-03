@@ -123,38 +123,13 @@ namespace CheckinPPP.Business
 
             var bookingsUpdate = new BookingsUpdateSignalR
             {
+                ServiceId = serviceId,
                 Total = bookings.Count(),
-                AvailableBookings = availableBookings.Count()
+                AvailableBookings = availableBookings.Count(),
+                Time = time
             };
 
             return bookingsUpdate;
-        }
-
-        public List<SlotDTO> MapToSlotDTO(IEnumerable<Booking> bookings)
-        {
-            var dto = new List<SlotDTO>();
-            var services = new List<string>();
-            services.Add("08:30");
-            services.Add("10:10");
-            services.Add("11:50");
-
-            foreach (var service in services)
-            {
-                dto.Add(
-                    new SlotDTO
-                    {
-                        Time = service,
-                        AvailableSlots = 0
-                    }
-                );
-            }
-
-            foreach (var slot in dto)
-            {
-                slot.AvailableSlots = bookings.Where(x => x.Time == slot.Time).Count();
-            }
-
-            return dto;
         }
 
         private Member MapToMember(BookingDTO bookingDTO)
