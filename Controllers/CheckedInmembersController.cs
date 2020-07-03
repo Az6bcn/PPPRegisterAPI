@@ -31,6 +31,7 @@ namespace CheckinPPP.Controllers
                 .Include(x => x.Member)
                 .Where(x => x.MemberId != null
                     && x.SignIn != null)
+                .OrderBy(x => x.Member.Surname)
                 .ToListAsync();
 
             var mappedResult = ParseToCheckedInMemeberDTO(result);
@@ -39,13 +40,17 @@ namespace CheckinPPP.Controllers
         }
 
 
-        [HttpGet("{date}")]
-        public async Task<IActionResult> GetAllRecordsUpToSpecifiedDate(DateTime date)
+        [HttpGet("{date}/{serviceId}")]
+        public async Task<IActionResult> GetAllRecordsUpToSpecifiedDate(DateTime date, int serviceId)
         {
+            if (serviceId == 0 || !isValidServiceId(serviceId)) { return BadRequest(); }
+
             var result = await _context.Set<Booking>()
                 .Include(x => x.Member)
                 .Where(x => x.Date.Date == date.Date
-                    && x.MemberId != null)
+                    && x.MemberId != null
+                    && x.ServiceId == serviceId)
+                .OrderBy(x => x.Member.Surname)
                 .ToListAsync();
 
             var mappedResult = ParseToCheckedInMemeberDTO(result);
@@ -53,14 +58,18 @@ namespace CheckinPPP.Controllers
             return Ok(mappedResult);
         }
 
-        [HttpGet("{dateFrom}/{dateTo}")]
-        public async Task<IActionResult> GetAllRecordsUpToSpecifiedDate(DateTime dateFrom, DateTime dateTo)
+        [HttpGet("{dateFrom}/{dateTo}/{serviceId}")]
+        public async Task<IActionResult> GetAllRecordsUpToSpecifiedDate(DateTime dateFrom, DateTime dateTo, int serviceId)
         {
+            if (serviceId == 0 || !isValidServiceId(serviceId)) { return BadRequest(); }
+
             var result = await _context.Set<Booking>()
                  .Include(x => x.Member)
                 .Where(x => x.Date.Date >= dateFrom.Date
                     && x.Date.Date <= dateTo.Date
-                    && x.MemberId != null)
+                    && x.MemberId != null
+                     && x.ServiceId == serviceId)
+                .OrderBy(x => x.Member.Surname)
                 .ToListAsync();
 
             var mappedResult = ParseToCheckedInMemeberDTO(result);
@@ -114,6 +123,14 @@ namespace CheckinPPP.Controllers
             return Ok(MapToSignInOutResponseDTO(result));
         }
 
+        [HttpGet("services")]
+        public IActionResult GetServices()
+        {
+            var services = GetAllServices();
+
+            return Ok(services);
+        }
+
         private List<CheckedInMemberDTO> ParseToCheckedInMemeberDTO(List<Booking> bookings)
         {
             var checkedInMembers = new List<CheckedInMemberDTO>();
@@ -160,6 +177,28 @@ namespace CheckinPPP.Controllers
             };
 
             return response;
+        }
+
+
+        private bool isValidServiceId(int serviceId)
+        {
+            var response = GetAllServices()
+                .Select(x => x.Id)
+                .Contains(serviceId);
+
+            return response;
+        }
+
+        private IEnumerable<ServiceDTO> GetAllServices()
+        {
+            var services = new List<ServiceDTO>
+            {
+                new ServiceDTO{Id = 1, Name = "First Service" },
+                new ServiceDTO{Id = 2, Name = "Second Service" },
+                new ServiceDTO{Id = 3, Name = "Workers Meeting" }
+            };
+
+            return services;
         }
     }
 }
