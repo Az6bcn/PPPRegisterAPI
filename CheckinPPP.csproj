@@ -11,6 +11,8 @@
     <Folder Include="Data\" />
     <Folder Include="Data\Entities\" />
     <Folder Include="Helpers\" />
+    <Folder Include="Business\" />
+    <Folder Include="Data\Queries\" />
   </ItemGroup>
 
 

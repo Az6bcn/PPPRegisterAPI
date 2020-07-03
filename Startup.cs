@@ -12,6 +12,8 @@ using System.Linq;
 using CheckinPPP.Helpers;
 using CheckinPPP.Data.Entities;
 using Newtonsoft.Json;
+using CheckinPPP.Business;
+using CheckinPPP.Data.Queries;
 
 namespace CheckinPPP
 {
@@ -51,6 +53,9 @@ namespace CheckinPPP
             MigrateDatabase(services);
 
             SeedServiceDatas(services);
+
+            services.AddTransient<IBookingBusiness, BookingBusiness>();
+            services.AddTransient<IBookingQueries, BookingQueries>();
 
             services.AddSignalR(hubOptions =>
             {
