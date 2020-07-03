@@ -193,7 +193,7 @@ namespace CheckinPPP.Business
             return members;
         }
 
-        private List<BookingDTO> MapToBookingDTO(List<Booking> bookings)
+        public IEnumerable<BookingDTO> MapToBookingDTO(IEnumerable<Booking> bookings)
         {
             var dto = new List<BookingDTO>();
 

@@ -32,20 +32,15 @@ namespace CheckinPPP.Controllers
             _bookingQueries = bookingQueries;
         }
 
-        //[HttpGet("{serviceId}/{date}/{time}")]
-        //public async Task<IActionResult> GetAvailableBookings(int serviceId, DateTime date, string time)
-        //{
-        //    var availableBookings = await _context.Set<Booking>()
-        //        .Where(x => x.ServiceId == serviceId
-        //            && x.Date.Date == date.Date
-        //            && x.Time == time
-        //            && x.MemberId == null)
-        //        .ToListAsync();
+        [HttpGet("{serviceId}/{date}/{time}")]
+        public async Task<IActionResult> GetAvailableBookings(int serviceId, DateTime date, string time)
+        {
+            var availableBookings = await _bookingQueries.GetAvailableBookingsAsync(serviceId, date, time);
 
-        //    var availableBookingsDTO = MapToBookingDTO(availableBookings);
+            var availableBookingsDTO = _bookingBusiness.MapToBookingDTO(availableBookings);
 
-        //    return Ok(availableBookingsDTO);
-        //}
+            return Ok(availableBookingsDTO);
+        }
 
         [HttpGet("{date}")]
         public async Task<IActionResult> GetAvailableBookings(DateTime date)
