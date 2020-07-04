@@ -61,5 +61,67 @@ namespace CheckinPPP.Data.Queries
 
             return response;
         }
+
+        public async Task<bool> IsValidBookingAsync(int bookingId, string email, string name, string surname)
+        {
+            var response = await _context.Set<Booking>()
+                .Include(x => x.Member)
+                .Where(x => x.Id == bookingId
+                    && x.Member.EmailAddress == email
+                    && x.Member.Name == name
+                    && x.Member.Surname == surname)
+                .ToListAsync();
+
+            if (response.Any())
+            {
+                return true;
+            }
+
+            return false;
+
+        }
+
+        public async Task<Booking> FindBookingByIdAsync(int bookingId)
+        {
+            var response = await _context.Set<Booking>()
+                .Include(x => x.Member)
+                .Where(x => x.Id == bookingId)
+                .FirstOrDefaultAsync();
+
+            return response;
+        }
+
+        public async Task<IEnumerable<Booking>> FindBookingsByGoupLinkIdAsync(Guid bookingId)
+        {
+            var response = await _context.Set<Booking>()
+                .Include(x => x.Member)
+                .Where(x => x.GroupLinkId == bookingId)
+                .ToListAsync();
+
+            return response;
+        }
+
+        public async Task CancelBookingAsync(Booking booking)
+        {
+            _context.Update(booking);
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task CancelBookingsAsync(IEnumerable<Booking> booking)
+        {
+            _context.UpdateRange(booking);
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<Member> FindMemberByEmailAsync(string email)
+        {
+            var response = await _context.Set<Member>()
+                .FirstOrDefaultAsync(x => x.EmailAddress == email);
+
+            return response;
+        }
+
     }
 }

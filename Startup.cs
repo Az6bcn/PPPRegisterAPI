@@ -11,9 +11,9 @@ using Microsoft.Extensions.Logging;
 using System.Linq;
 using CheckinPPP.Helpers;
 using CheckinPPP.Data.Entities;
-using Newtonsoft.Json;
 using CheckinPPP.Business;
 using CheckinPPP.Data.Queries;
+using CheckinPPP.Models;
 
 namespace CheckinPPP
 {
@@ -54,8 +54,12 @@ namespace CheckinPPP
 
             SeedServiceDatas(services);
 
+            // load email settings so it can be made available via DI
+            services.AddOptions<MailGunApiEmailSettings>(); services.Configure<MailGunApiEmailSettings>(Configuration.GetSection("MailGunApiEmailSettings"));
+
             services.AddTransient<IBookingBusiness, BookingBusiness>();
             services.AddTransient<IBookingQueries, BookingQueries>();
+            services.AddTransient<ISendEmails, SendEmails>();
 
             services.AddSignalR(hubOptions =>
             {
@@ -147,7 +151,9 @@ namespace CheckinPPP
                     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Startup>>();
 
-                    var bookings = context.Set<Booking>().ToList();
+                    var bookings = context.Set<Booking>()
+                        .Select(x => x.Id)
+                        .ToList();
 
                     logger.LogInformation("Prepairing to seed data .....");
 

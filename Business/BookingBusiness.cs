@@ -32,13 +32,25 @@ namespace CheckinPPP.Business
             {
                 var response = await _bookingQueries.GetAvailableSingleBookingsAsync(booking);
 
-                var member = MapToMember(booking);
-
                 if (response == null)
                 {
                     return new Booking();
                 }
 
+                var bookingReference = Guid.NewGuid();
+                response.BookingReference = bookingReference;
+
+                // won't work bcos in group booking we assign same email to all the users.
+                //var existingMember = await _bookingQueries.FindMemberByEmailAsync(booking.EmailAddress);
+
+                //if (existingMember is null)
+                //{
+                //    var member = MapToMember(booking);
+                //    response.Member = member;
+                //}
+                //response.Member = existingMember;
+
+                var member = MapToMember(booking);
                 response.Member = member;
 
                 _context.UpdateRange(response);
@@ -77,6 +89,7 @@ namespace CheckinPPP.Business
 
                 var members = MapToMembers(booking);
                 var groupId = Guid.NewGuid();
+                var bookingReference = Guid.NewGuid();
 
                 var i = 0;
                 foreach (var _booking in response)
@@ -84,6 +97,7 @@ namespace CheckinPPP.Business
 
                     _booking.Member = members[i];
                     _booking.GroupLinkId = groupId;
+                    _booking.BookingReference = bookingReference;
 
                     i++;
                 }
@@ -146,6 +160,47 @@ namespace CheckinPPP.Business
             return member;
         }
 
+        public IEnumerable<BookingDTO> MapToBookingDTO(IEnumerable<Booking> bookings)
+        {
+            var dto = new List<BookingDTO>();
+
+            foreach (var booking in bookings)
+            {
+                dto.Add(
+                    new BookingDTO
+                    {
+                        Id = booking.Id,
+                        ServiceId = booking.ServiceId,
+                        Date = booking.Date,
+                        Time = booking.Time
+                    }
+                );
+            }
+
+            return dto;
+        }
+
+        public async Task<bool> IsValidBookingAsync(int bookingId, string email, string name, string surname)
+        {
+            var isValidBooking = await _bookingQueries.IsValidBookingAsync(bookingId, email, name, surname);
+
+            return isValidBooking;
+        }
+
+        public async Task CancelBookingInsertionAsync(CancelledBooking cancelledBooking)
+        {
+            _context.Add<CancelledBooking>(cancelledBooking);
+
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task CancelBookingsInsertionAsync(IEnumerable<CancelledBooking> cancelledBookings)
+        {
+            await _context.AddRangeAsync(cancelledBookings);
+
+            await _context.SaveChangesAsync();
+        }
+
         private List<Member> MapToMembers(BookingDTO bookingDTO)
         {
             var members = new List<Member>();
@@ -166,26 +221,6 @@ namespace CheckinPPP.Business
 
 
             return members;
-        }
-
-        public IEnumerable<BookingDTO> MapToBookingDTO(IEnumerable<Booking> bookings)
-        {
-            var dto = new List<BookingDTO>();
-
-            foreach (var booking in bookings)
-            {
-                dto.Add(
-                    new BookingDTO
-                    {
-                        Id = booking.Id,
-                        ServiceId = booking.ServiceId,
-                        Date = booking.Date,
-                        Time = booking.Time
-                    }
-                );
-            }
-
-            return dto;
         }
     }
 }

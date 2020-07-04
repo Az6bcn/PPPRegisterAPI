@@ -14,6 +14,7 @@ namespace CheckinPPP.Data
 
         DbSet<Member> Members { get; set; }
         DbSet<Booking> Bookings { get; set; }
+        DbSet<CancelledBooking> CancelledBookings { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
