@@ -160,7 +160,7 @@ namespace CheckinPPP.Business
             return member;
         }
 
-        public IEnumerable<BookingDTO> MapToBookingDTO(IEnumerable<Booking> bookings)
+        public IEnumerable<BookingDTO> MapToBookingDTOs(IEnumerable<Booking> bookings)
         {
             var dto = new List<BookingDTO>();
 
@@ -176,6 +176,20 @@ namespace CheckinPPP.Business
                     }
                 );
             }
+
+            return dto;
+        }
+
+        public BookingDTO MapToBookingDTO(Booking booking)
+        {
+
+            var dto = new BookingDTO
+            {
+                Id = booking.Id,
+                ServiceId = booking.ServiceId,
+                Date = booking.Date,
+                Time = booking.Time,
+            };
 
             return dto;
         }

@@ -44,9 +44,24 @@ namespace CheckinPPP.Controllers
         {
             var availableBookings = await _bookingQueries.GetAvailableBookingsAsync(serviceId, date, time);
 
-            var availableBookingsDTO = _bookingBusiness.MapToBookingDTO(availableBookings);
+            var availableBookingsDTO = _bookingBusiness.MapToBookingDTOs(availableBookings);
 
             return Ok(availableBookingsDTO);
+        }
+
+        [HttpGet("cancellable/{bookingId}")]
+        public async Task<IActionResult> GetAvailableBookings(int bookingId)
+        {
+            var booking = await _bookingQueries.FindBookingByIdAsync(bookingId);
+
+            if (booking.MemberId is null)
+            {
+                return Ok(new { cancellable = false });
+            }
+
+            var availableBookingsDTO = _bookingBusiness.MapToBookingDTO(booking);
+
+            return Ok(new { cancellable = true, data = availableBookingsDTO });
         }
 
         [HttpGet("{date}")]
@@ -85,7 +100,7 @@ namespace CheckinPPP.Controllers
 
                 _sendEmails.SendBookingConfirmationTemplate(personToEmail.Member.EmailAddress, personToEmail);
 
-                return Ok(groupBookingResponse);
+                return Ok(_bookingBusiness.MapToBookingDTOs(groupBookingResponse));
             }
 
             // single booking: check select booking still available or any available
@@ -96,7 +111,7 @@ namespace CheckinPPP.Controllers
 
             _sendEmails.SendBookingConfirmationTemplate(singleBookingResponse.Member.EmailAddress, singleBookingResponse);
 
-            return Ok(singleBookingResponse);
+            return Ok(_bookingBusiness.MapToBookingDTO(singleBookingResponse));
         }
 
 
@@ -135,6 +150,9 @@ namespace CheckinPPP.Controllers
                 await CancelInsertions(booking);
                 await _bookingQueries.CancelBookingAsync(booking);
             }
+
+            var bookingsUpdate2 = await _bookingBusiness.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
+            await _hubContext.Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate2);
 
             return Ok();
         }

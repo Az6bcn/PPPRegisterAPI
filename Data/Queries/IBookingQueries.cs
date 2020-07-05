@@ -18,5 +18,6 @@ namespace CheckinPPP.Data.Queries
         Task<Member> FindMemberByEmailAsync(string email);
         Task<IEnumerable<Booking>> FindBookingsByGoupLinkIdAsync(Guid bookingId);
         Task CancelBookingsAsync(IEnumerable<Booking> booking);
+
     }
 }
