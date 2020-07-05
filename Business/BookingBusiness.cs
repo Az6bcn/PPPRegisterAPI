@@ -33,9 +33,9 @@ namespace CheckinPPP.Business
             {
                 var response = await _bookingQueries.GetAvailableSingleBookingsAsync(booking, booking.Member.CategoryId);
 
-                if (response == null)
+                if (response is null)
                 {
-                    return new Booking();
+                    return null;
                 }
 
                 var bookingReference = Guid.NewGuid();

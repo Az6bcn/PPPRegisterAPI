@@ -94,6 +94,11 @@ namespace CheckinPPP.Controllers
             {
                 var groupBookingResponse = await _bookingBusiness.GroupBookingAsync(booking);
 
+                if (!groupBookingResponse.Any())
+                {
+                    return BadRequest();
+                }
+
                 var bookingsUpdate = await _bookingBusiness.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
                 await _hubContext.Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate);
 
@@ -107,6 +112,11 @@ namespace CheckinPPP.Controllers
 
             // single booking: check select booking still available or any available
             var singleBookingResponse = await _bookingBusiness.SingleBookingAsync(booking);
+
+            if (singleBookingResponse is null)
+            {
+                return BadRequest();
+            }
 
             var bookingsUpdate2 = await _bookingBusiness.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
             await _hubContext.Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate2);
