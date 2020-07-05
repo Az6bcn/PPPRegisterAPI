@@ -13,6 +13,11 @@ namespace CheckinPPP.Data.Entities
         public int? MemberId { get; set; }
         public DateTime? SignIn { get; set; }
         public DateTime? SignOut { get; set; }
-        public Guid BookingReference { get; set; }
+        public Guid? BookingReference { get; set; }
+
+        public bool PickUp { get; set; }
+        public bool IsAdultSlot { get; set; }
+        public bool IsKidSlot { get; set; }
+        public bool IsToddlerSlot { get; set; }
     }
 }

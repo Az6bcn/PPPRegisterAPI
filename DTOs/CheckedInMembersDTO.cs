@@ -16,5 +16,6 @@ namespace CheckinPPP.DTOs
         public int ServiceId { get; set; }
         public string Time { get; set; }
         public DateTime Date { get; set; }
+        public bool PickUp { get; set; }
     }
 }

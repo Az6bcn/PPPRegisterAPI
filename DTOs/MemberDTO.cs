@@ -8,5 +8,10 @@ namespace CheckinPPP.DTOs
         public string Gender { get; set; }
         public string Mobile { get; set; }
         public string EmailAddress { get; set; }
+
+        public bool PickUp { get; set; }
+
+        // 1: adult, 2: kid 3: toddler
+        public int CategoryId { get; set; }
     }
 }

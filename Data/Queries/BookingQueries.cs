@@ -38,28 +38,75 @@ namespace CheckinPPP.Data.Queries
             return response;
         }
 
-        public async Task<Booking> GetAvailableSingleBookingsAsync(BookingDTO booking)
+        public async Task<Booking> GetAvailableSingleBookingsAsync(BookingDTO booking, int category)
         {
-            var response = await _context.Set<Booking>()
+            Booking fetchedBooking;
+
+            var response = _context.Set<Booking>()
                 .Where(x => x.MemberId == null
                     && x.Date.Date == booking.Date.Date
-                    && x.Time == booking.Time
-                    )
+                    && x.Time == booking.Time);
+
+            if (category == 1)
+            {
+                fetchedBooking = await response
+                    .Where(x => x.IsAdultSlot)
+                    .FirstOrDefaultAsync();
+
+                return fetchedBooking;
+            }
+            if (category == 2)
+            {
+                fetchedBooking = await response
+                    .Where(x => x.IsKidSlot)
+                    .FirstOrDefaultAsync();
+
+                return fetchedBooking;
+            }
+
+            fetchedBooking = await response
+                .Where(x => x.IsToddlerSlot)
                 .FirstOrDefaultAsync();
 
-            return response;
+            return fetchedBooking;
         }
 
-        public async Task<IEnumerable<Booking>> GetAvailableGroupBookingsAsync(BookingDTO booking)
+        public async Task<IEnumerable<Booking>> GetAvailableGroupBookingsAsync(BookingDTO booking, List<int> categories)
         {
-            var response = await _context.Set<Booking>()
+            var category1Count = categories.Where(x => x == 1).Count();
+            var category2Count = categories.Where(x => x == 2).Count();
+            var category3Count = categories.Where(x => x == 3).Count();
+
+            var bookings = new List<Booking>();
+
+            var response = _context.Set<Booking>()
                 .Where(x => x.MemberId == null
                     && x.Date.Date == booking.Date.Date
-                    && x.Time == booking.Time)
-                .Take(booking.Members.Count)
+                    && x.Time == booking.Time);
+
+            // category 1
+            var res = await response
+                .Where(x => x.IsAdultSlot)
+                .Take(category1Count)
                 .ToListAsync();
 
-            return response;
+            // category 2
+            var res2 = await response
+               .Where(x => x.IsKidSlot)
+               .Take(category2Count)
+               .ToListAsync();
+
+            // category 3
+            var res3 = await response
+               .Where(x => x.IsToddlerSlot)
+               .Take(category3Count)
+               .ToListAsync();
+
+            bookings.AddRange(res);
+            bookings.AddRange(res2);
+            bookings.AddRange(res3);
+
+            return bookings;
         }
 
         public async Task<bool> IsValidBookingAsync(int bookingId, string email, string name, string surname)

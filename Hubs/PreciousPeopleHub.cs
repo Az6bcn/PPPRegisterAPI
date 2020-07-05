@@ -40,7 +40,11 @@ namespace CheckinPPP.Hubs
             var bookingsUpdate = new BookingsUpdateSignalR
             {
                 Total = bookings.Count(),
-                AvailableBookings = availableBookings.Count()
+                ServiceId = serviceId,
+                Time = time,
+                AdultsAvailableSlots = bookings.Where(x => x.IsAdultSlot).Count(),
+                KidsAvailableSlots = bookings.Where(x => x.IsKidSlot).Count(),
+                ToddlersAvailableSlots = bookings.Where(x => x.IsToddlerSlot).Count()
             };
 
             // send available book to all clients: client need to implement ReceivedBookingsUpdateAsync to receive updates

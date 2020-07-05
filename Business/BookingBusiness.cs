@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using CheckinPPP.Data;
 using CheckinPPP.Data.Entities;
@@ -30,7 +31,7 @@ namespace CheckinPPP.Business
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                var response = await _bookingQueries.GetAvailableSingleBookingsAsync(booking);
+                var response = await _bookingQueries.GetAvailableSingleBookingsAsync(booking, booking.Member.CategoryId);
 
                 if (response == null)
                 {
@@ -39,19 +40,11 @@ namespace CheckinPPP.Business
 
                 var bookingReference = Guid.NewGuid();
                 response.BookingReference = bookingReference;
-
-                // won't work bcos in group booking we assign same email to all the users.
-                //var existingMember = await _bookingQueries.FindMemberByEmailAsync(booking.EmailAddress);
-
-                //if (existingMember is null)
-                //{
-                //    var member = MapToMember(booking);
-                //    response.Member = member;
-                //}
-                //response.Member = existingMember;
+                response.PickUp = booking.Member.PickUp;
 
                 var member = MapToMember(booking);
                 response.Member = member;
+
 
                 _context.UpdateRange(response);
                 var numbersUpdated = await _context.SaveChangesAsync();
@@ -80,9 +73,13 @@ namespace CheckinPPP.Business
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                var response = await _bookingQueries.GetAvailableGroupBookingsAsync(booking);
+                var categoriesInGroupBooking = booking
+                    .Members
+                    .Select(x => x.CategoryId).ToList();
 
-                if (response.Count() != booking.Members.Count)
+                var response = await _bookingQueries.GetAvailableGroupBookingsAsync(booking, categoriesInGroupBooking);
+
+                if (!response.Any() || response.Count() != booking.Members.Count)
                 {
                     return new List<Booking>();
                 }
@@ -98,6 +95,10 @@ namespace CheckinPPP.Business
                     _booking.Member = members[i];
                     _booking.GroupLinkId = groupId;
                     _booking.BookingReference = bookingReference;
+                    _booking.PickUp = booking.Members
+                        .Where(x => x.Name == members[i].Name
+                            && x.Surname == members[i].Surname)
+                        .First().PickUp;
 
                     i++;
                 }
@@ -139,8 +140,10 @@ namespace CheckinPPP.Business
             {
                 ServiceId = serviceId,
                 Total = bookings.Count(),
-                AvailableBookings = availableBookings.Count(),
-                Time = time
+                Time = time,
+                AdultsAvailableSlots = bookings.Where(x => x.IsAdultSlot).Count(),
+                KidsAvailableSlots = bookings.Where(x => x.IsKidSlot).Count(),
+                ToddlersAvailableSlots = bookings.Where(x => x.IsToddlerSlot).Count()
             };
 
             return bookingsUpdate;

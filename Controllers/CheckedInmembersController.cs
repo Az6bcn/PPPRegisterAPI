@@ -148,7 +148,8 @@ namespace CheckinPPP.Controllers
                         SignedIn = booking.SignIn,
                         SignedOut = booking.SignOut,
                         Date = booking.Date,
-                        Time = booking.Time
+                        Time = booking.Time,
+                        PickUp = booking.PickUp
                     });
             }
             return checkedInMembers;
