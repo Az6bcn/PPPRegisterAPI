@@ -77,7 +77,7 @@ namespace CheckinPPP.Helpers
                 $"<p> Your booking reference is {booking.BookingReference}, your reservation to come to church on the <strong>{booking.Date.Date}</strong> for the time slot <strong>{booking.Time}</strong> has been confirmed.</p>" +
                 $"<p> To cancel this booking, please click on the button below. " +
                 $"</p>" +
-                $"<button type=\"submit\"><a href=\"{ new Uri($"{_mailSettings.ReturnUri}?bookingId={booking.Id}&email={email}&name={booking.Member.Name}&surname={booking.Member.Surname}")}\"> Cancel </a> </button>" +
+                $"<a href=\"{ new Uri($"{_mailSettings.ReturnUri}?bookingId={booking.Id}&email={email}&name={booking.Member.Name}&surname={booking.Member.Surname}")}\"> Cancel </a>" +
                 $"</br >" +
                 $"<p> Precious People Parish </p>" +
                 $"<p> 0161 835 9000, 07535 703 955 </p>";
