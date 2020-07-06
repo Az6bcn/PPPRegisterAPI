@@ -5,10 +5,8 @@ using System.Threading.Tasks;
 using CheckinPPP.Data;
 using CheckinPPP.Data.Entities;
 using CheckinPPP.DTOs;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 
 namespace CheckinPPP.Controllers
 {
@@ -149,7 +147,8 @@ namespace CheckinPPP.Controllers
                         SignedOut = booking.SignOut,
                         Date = booking.Date,
                         Time = booking.Time,
-                        PickUp = booking.PickUp
+                        PickUp = booking.PickUp,
+                        Gender = booking.Member.Gender
                     });
             }
             return checkedInMembers;

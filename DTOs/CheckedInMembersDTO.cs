@@ -17,5 +17,6 @@ namespace CheckinPPP.DTOs
         public string Time { get; set; }
         public DateTime Date { get; set; }
         public bool PickUp { get; set; }
+        public string Gender { get; set; }
     }
 }
