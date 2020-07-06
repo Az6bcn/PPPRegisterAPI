@@ -102,8 +102,12 @@ namespace CheckinPPP.Controllers
                     return BadRequest();
                 }
 
-                var bookingsUpdate = await _bookingBusiness.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
-                await _hubContext.Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate);
+                if (groupBookingResponse.Any())
+                {
+                    var bookingsUpdate = await _bookingBusiness.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
+                    await _hubContext.Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate);
+                }
+
 
                 // all have same email, just mesaage anyone of them
                 var personToEmail = groupBookingResponse.First();
@@ -122,8 +126,12 @@ namespace CheckinPPP.Controllers
                 return BadRequest();
             }
 
-            var bookingsUpdate2 = await _bookingBusiness.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
-            await _hubContext.Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate2);
+            if (singleBookingResponse != null)
+            {
+                var bookingsUpdate2 = await _bookingBusiness.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
+                await _hubContext.Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate2);
+            }
+
 
             //_sendEmails.SendBookingConfirmationTemplate(singleBookingResponse.Member.EmailAddress, singleBookingResponse);
             await _googleMailService.SendBookingConfirmationEmailAsync(singleBookingResponse.Member.EmailAddress, singleBookingResponse);

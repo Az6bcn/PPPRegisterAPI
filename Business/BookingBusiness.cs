@@ -129,7 +129,8 @@ namespace CheckinPPP.Business
             var bookings = await _context.Set<Booking>()
                 .Where(x => x.ServiceId == serviceId
                     && x.Date.Date == date.Date
-                    && x.Time == time)
+                    && x.Time == time
+                    && x.MemberId == null)
                 .ToListAsync();
 
             var availableBookings = bookings
@@ -141,9 +142,9 @@ namespace CheckinPPP.Business
                 ServiceId = serviceId,
                 Total = bookings.Count(),
                 Time = time,
-                AdultsAvailableSlots = bookings.Where(x => x.IsAdultSlot).Count(),
-                KidsAvailableSlots = bookings.Where(x => x.IsKidSlot).Count(),
-                ToddlersAvailableSlots = bookings.Where(x => x.IsToddlerSlot).Count()
+                AdultsAvailableSlots = availableBookings.Where(x => x.IsAdultSlot).Count(),
+                KidsAvailableSlots = availableBookings.Where(x => x.IsKidSlot).Count(),
+                ToddlersAvailableSlots = availableBookings.Where(x => x.IsToddlerSlot).Count()
             };
 
             return bookingsUpdate;
