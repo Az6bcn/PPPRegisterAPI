@@ -160,13 +160,16 @@ namespace CheckinPPP.Controllers
             if (booking.GroupLinkId != null)
             {
                 var groupBookings = await _bookingQueries.FindBookingsByGoupLinkIdAsync((Guid)booking.GroupLinkId);
+                await CancelInsertions(null, groupBookings);
 
                 foreach (var _booking in groupBookings)
                 {
                     _booking.MemberId = null;
+                    _booking.BookingReference = null;
+                    _booking.GroupLinkId = null;
                 }
 
-                await CancelInsertions(null, groupBookings);
+
                 await _bookingQueries.CancelBookingsAsync(groupBookings);
             }
             else
@@ -190,6 +193,8 @@ namespace CheckinPPP.Controllers
                 var _cancelledBooking = CancelledBookings(bookings);
 
                 await _bookingBusiness.CancelBookingsInsertionAsync(_cancelledBooking);
+
+                return;
             }
 
             // insert into cancel table
@@ -204,8 +209,7 @@ namespace CheckinPPP.Controllers
             {
                 BookingId = booking.Id,
                 Member = booking.Member,
-                CancelledAt = DateTime.Now,
-                BookingReferenceId = booking.BookingReference
+                CancelledAt = DateTime.Now
             };
 
             return cancelledBooking;
@@ -222,8 +226,7 @@ namespace CheckinPPP.Controllers
                 {
                     BookingId = booking.Id,
                     Member = booking.Member,
-                    CancelledAt = DateTime.Now,
-                    BookingReferenceId = booking.BookingReference
+                    CancelledAt = DateTime.Now
                 });
             }
 
