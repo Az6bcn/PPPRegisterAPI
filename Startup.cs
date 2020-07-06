@@ -55,11 +55,15 @@ namespace CheckinPPP
             SeedServiceDatas(services);
 
             // load email settings so it can be made available via DI
-            services.AddOptions<MailGunApiEmailSettings>(); services.Configure<MailGunApiEmailSettings>(Configuration.GetSection("MailGunApiEmailSettings"));
+            services.AddOptions<MailGunApiEmailSettings>();
+            services.Configure<MailGunApiEmailSettings>(Configuration.GetSection("MailGunApiEmailSettings"));
+
+            services.Configure<MailSettings>(Configuration.GetSection("MailSettings"));
 
             services.AddTransient<IBookingBusiness, BookingBusiness>();
             services.AddTransient<IBookingQueries, BookingQueries>();
             services.AddTransient<ISendEmails, SendEmails>();
+            services.AddTransient<IGoogleMailService, GoogleMailService>();
 
             services.AddSignalR(hubOptions =>
             {

@@ -22,6 +22,7 @@ namespace CheckinPPP.Controllers
         private readonly IBookingBusiness _bookingBusiness;
         private readonly IBookingQueries _bookingQueries;
         private readonly ISendEmails _sendEmails;
+        private readonly IGoogleMailService _googleMailService;
 
         private IHubContext<PreciousPeopleHub, IPreciousPeopleClient> _hubContext { get; }
 
@@ -30,13 +31,15 @@ namespace CheckinPPP.Controllers
             IHubContext<PreciousPeopleHub,
             IPreciousPeopleClient> hubContext,
             IBookingQueries bookingQueries,
-            ISendEmails sendEmails
+            ISendEmails sendEmails,
+            IGoogleMailService googleMailService
             )
         {
             _bookingBusiness = bookingBusiness;
             _hubContext = hubContext;
             _bookingQueries = bookingQueries;
             _sendEmails = sendEmails;
+            _googleMailService = googleMailService;
         }
 
         [HttpGet("{serviceId}/{date}/{time}")]
@@ -105,7 +108,8 @@ namespace CheckinPPP.Controllers
                 // all have same email, just mesaage anyone of them
                 var personToEmail = groupBookingResponse.First();
 
-                _sendEmails.SendBookingConfirmationTemplate(personToEmail.Member.EmailAddress, personToEmail);
+                //_sendEmails.SendBookingConfirmationTemplate(personToEmail.Member.EmailAddress, personToEmail);
+                await _googleMailService.SendBookingConfirmationEmailAsync(personToEmail.Member.EmailAddress, personToEmail);
 
                 return Ok(_bookingBusiness.MapToBookingDTOs(groupBookingResponse));
             }
@@ -121,7 +125,8 @@ namespace CheckinPPP.Controllers
             var bookingsUpdate2 = await _bookingBusiness.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
             await _hubContext.Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate2);
 
-            _sendEmails.SendBookingConfirmationTemplate(singleBookingResponse.Member.EmailAddress, singleBookingResponse);
+            //_sendEmails.SendBookingConfirmationTemplate(singleBookingResponse.Member.EmailAddress, singleBookingResponse);
+            await _googleMailService.SendBookingConfirmationEmailAsync(singleBookingResponse.Member.EmailAddress, singleBookingResponse);
 
             return Ok(_bookingBusiness.MapToBookingDTO(singleBookingResponse));
         }
