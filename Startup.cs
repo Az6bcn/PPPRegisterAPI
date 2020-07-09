@@ -14,6 +14,8 @@ using CheckinPPP.Data.Entities;
 using CheckinPPP.Business;
 using CheckinPPP.Data.Queries;
 using CheckinPPP.Models;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace CheckinPPP
 {
@@ -110,7 +112,7 @@ namespace CheckinPPP
 
             app.UseEndpoints(endpoints =>
             {
-                //endpoints.MapFallbackToController("index", "Fallback");
+                endpoints.MapFallbackToController("index", "Fallback");
                 endpoints.MapHub<PreciousPeopleHub>("/ppphub");
                 endpoints.MapControllers();
             });
@@ -155,22 +157,24 @@ namespace CheckinPPP
                     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Startup>>();
 
-                    var bookings = context.Set<Booking>()
-                        .Select(x => x.Id)
-                        .ToList();
-
-                    logger.LogInformation("Prepairing to seed data .....");
-
-                    if (bookings.Count() == 0)
+                    if (context.Database.GetService<IRelationalDatabaseCreator>().Exists())
                     {
-                        context.AddRange(SeedFirstService.FirstServiceBookingData());
-                        context.AddRange(SeedSecondService.SeedSecondServiceBookingData());
-                        context.AddRange(SeedWorkersService.SeedWorkersServiceBookingData());
+                        var bookings = context.Set<Booking>()
+                            .Select(x => x.Id)
+                            .ToList();
 
-                        context.SaveChanges();
-                        logger.LogInformation("Seeded");
+                        logger.LogInformation("Prepairing to seed data .....");
+
+                        if (bookings.Count() == 0)
+                        {
+                            context.AddRange(SeedFirstService.FirstServiceBookingData());
+                            context.AddRange(SeedSecondService.SeedSecondServiceBookingData());
+                            context.AddRange(SeedWorkersService.SeedWorkersServiceBookingData());
+
+                            context.SaveChanges();
+                            logger.LogInformation("Seeded");
+                        }
                     }
-
                     logger.LogInformation("Nothing to Seed");
                 }
             }

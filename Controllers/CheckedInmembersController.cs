@@ -193,9 +193,9 @@ namespace CheckinPPP.Controllers
         {
             var services = new List<ServiceDTO>
             {
-                new ServiceDTO{Id = 1, Name = "First Service" },
-                new ServiceDTO{Id = 2, Name = "Second Service" },
-                new ServiceDTO{Id = 3, Name = "Workers Meeting" }
+                new ServiceDTO{Id = 1, Name = "Second Service" },
+                new ServiceDTO{Id = 2, Name = "Third Service" },
+                new ServiceDTO{Id = 3, Name = "First Service" }
             };
 
             return services;
