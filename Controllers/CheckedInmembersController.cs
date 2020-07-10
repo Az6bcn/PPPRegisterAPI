@@ -75,6 +75,22 @@ namespace CheckinPPP.Controllers
             return Ok(mappedResult);
         }
 
+        [HttpGet("pickUpReport/{date}")]
+        public async Task<IActionResult> GetAllPickUpRecordsOnSpecifiedDate(DateTime date)
+        {
+            var result = await _context.Set<Booking>()
+                .Include(x => x.Member)
+                .Where(x => x.Date.Date == date.Date
+                    && x.MemberId != null
+                    && x.PickUp)
+                .OrderBy(x => x.Member.Surname)
+                .ToListAsync();
+
+            var mappedResult = ParseToCheckedInMemeberDTO(result);
+
+            return Ok(mappedResult);
+        }
+
         [HttpPost("signIn/{id}")]
         public async Task<IActionResult> SigIn([FromBody] SignInOutDTO data)
         {
