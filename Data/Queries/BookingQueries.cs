@@ -162,12 +162,50 @@ namespace CheckinPPP.Data.Queries
             await _context.SaveChangesAsync();
         }
 
-        public async Task<Member> FindMemberByEmailAsync(string email)
+        public async Task<Member> FindMemberByEmailAsync(string email, MemberDTO member)
         {
             var response = await _context.Set<Member>()
-                .FirstOrDefaultAsync(x => x.EmailAddress == email);
+                .FirstOrDefaultAsync(x => x.EmailAddress == email
+                && x.Name == member.Name
+                && x.Surname == member.Surname);
 
             return response;
+        }
+
+
+        public async Task<IEnumerable<Member>> FindMembersOfGroupBookingByEmailAsync(string email)
+        {
+            var response = await _context.Set<Member>()
+                .Where(x => x.EmailAddress == email)
+                .ToListAsync();
+
+            return response;
+        }
+
+        public async Task<BookingsUpdateSignalR> GetBookingsUpdateAsync(int serviceId, DateTime date, string time)
+        {
+            var bookings = await _context.Set<Booking>()
+                .Where(x => x.ServiceId == serviceId
+                    && x.Date.Date == date.Date
+                    && x.Time == time
+                    && x.MemberId == null)
+                .ToListAsync();
+
+            var availableBookings = bookings
+                .Where(x => x.MemberId == null)
+                .ToList();
+
+            var bookingsUpdate = new BookingsUpdateSignalR
+            {
+                ServiceId = serviceId,
+                Total = bookings.Count(),
+                Time = time,
+                AdultsAvailableSlots = availableBookings.Where(x => x.IsAdultSlot).Count(),
+                KidsAvailableSlots = availableBookings.Where(x => x.IsKidSlot).Count(),
+                ToddlersAvailableSlots = availableBookings.Where(x => x.IsToddlerSlot).Count()
+            };
+
+            return bookingsUpdate;
         }
 
     }

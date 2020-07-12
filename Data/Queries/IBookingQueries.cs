@@ -15,9 +15,10 @@ namespace CheckinPPP.Data.Queries
         Task<bool> IsValidBookingAsync(int bookingId, string email, string name, string surname);
         Task<Booking> FindBookingByIdAsync(int bookingId);
         Task CancelBookingAsync(Booking booking);
-        Task<Member> FindMemberByEmailAsync(string email);
+        Task<Member> FindMemberByEmailAsync(string email, MemberDTO member);
         Task<IEnumerable<Booking>> FindBookingsByGoupLinkIdAsync(Guid bookingId);
         Task CancelBookingsAsync(IEnumerable<Booking> booking);
-
+        Task<IEnumerable<Member>> FindMembersOfGroupBookingByEmailAsync(string email);
+        Task<BookingsUpdateSignalR> GetBookingsUpdateAsync(int serviceId, DateTime date, string time);
     }
 }
