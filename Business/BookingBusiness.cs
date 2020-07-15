@@ -7,147 +7,71 @@ using CheckinPPP.Data;
 using CheckinPPP.Data.Entities;
 using CheckinPPP.Data.Queries;
 using CheckinPPP.DTOs;
+using CheckinPPP.Helpers;
 using Microsoft.EntityFrameworkCore;
 
 namespace CheckinPPP.Business
 {
     public class BookingBusiness : IBookingBusiness
     {
-        private readonly ApplicationDbContext _context;
+
         private readonly IBookingQueries _bookingQueries;
 
-        public BookingBusiness(
-            ApplicationDbContext context,
-            IBookingQueries bookingQueries
-            )
+        public BookingBusiness(IBookingQueries bookingQueries)
         {
-            _context = context;
             _bookingQueries = bookingQueries;
         }
 
         public async Task<Booking> SingleBookingAsync(BookingDTO booking)
         {
-            // try and book
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
+            var response = await _bookingQueries.GetAvailableSingleBookingsAsync(booking, booking.Member.CategoryId);
+
+            if (response is null)
             {
-                var response = await _bookingQueries.GetAvailableSingleBookingsAsync(booking, booking.Member.CategoryId);
-
-                if (response is null)
-                {
-                    return null;
-                }
-
-                var bookingReference = Guid.NewGuid();
-                response.BookingReference = bookingReference;
-                response.PickUp = booking.Member.PickUp;
-
-                var member = MapToMember(booking);
-                response.Member = member;
-
-
-                _context.UpdateRange(response);
-                var numbersUpdated = await _context.SaveChangesAsync();
-
-                if (numbersUpdated == 2)
-                {
-                    await transaction.CommitAsync();
-                    return response;
-                }
-                else
-                {
-                    await transaction.RollbackAsync();
-                }
-            }
-            catch
-            {
-                await transaction.RollbackAsync();
+                return null;
             }
 
-            return new Booking();
+            response.BookingReference = Guid.NewGuid();
+            response.PickUp = booking.Member.PickUp;
+
+            var existsMember = await _bookingQueries.FindMemberByEmailAsync(booking.EmailAddress, booking.Member);
+
+            if (existsMember != null) { response.MemberId = existsMember.Id; }
+            else { response.Member = MapToMember(booking); }
+
+            return response;
         }
 
         public async Task<List<Booking>> GroupBookingAsync(BookingDTO booking)
         {
-            // try and book
-            using var transaction = await _context.Database.BeginTransactionAsync();
-            try
+            var members = new List<Member>();
+
+            var categoriesInGroupBooking = booking
+                .Members
+                .Select(x => x.CategoryId).ToList();
+
+            var response = await _bookingQueries.GetAvailableGroupBookingsAsync(booking, categoriesInGroupBooking);
+
+            if (!response.Any() || response.Count() != booking.Members.Count) { return new List<Booking>(); }
+
+            var existsMembers = await _bookingQueries.FindMembersOfGroupBookingByEmailAsync(booking.EmailAddress);
+
+            if (existsMembers.Any())
             {
-                var categoriesInGroupBooking = booking
-                    .Members
-                    .Select(x => x.CategoryId).ToList();
+                /// check if all the passed in members are in it
+                var res = GetAllMemebersInExistingGroupEmail(existsMembers, MapToMembers(booking));
 
-                var response = await _bookingQueries.GetAvailableGroupBookingsAsync(booking, categoriesInGroupBooking);
-
-                if (!response.Any() || response.Count() != booking.Members.Count)
-                {
-                    return new List<Booking>();
-                }
-
-                var members = MapToMembers(booking);
-                var groupId = Guid.NewGuid();
-                var bookingReference = Guid.NewGuid();
-
-                var i = 0;
-                foreach (var _booking in response)
-                {
-
-                    _booking.Member = members[i];
-                    _booking.GroupLinkId = groupId;
-                    _booking.BookingReference = bookingReference;
-                    _booking.PickUp = booking.Members
-                        .Where(x => x.Name == members[i].Name
-                            && x.Surname == members[i].Surname)
-                        .First().PickUp;
-
-                    i++;
-                }
-
-                _context.UpdateRange(response);
-                var numbersUpdated = await _context.SaveChangesAsync();
-
-                if (numbersUpdated == (booking.Members.Count * 2))
-                {
-                    await transaction.CommitAsync();
-                    return response.ToList();
-                }
-                else
-                {
-                    await transaction.RollbackAsync();
-                }
+                if (res.exists.Any()) { members.AddRange(res.exists); }
+                if (res.notExists.Any()) { members.AddRange(MapToMembers(booking)); }
             }
-            catch
+            else
             {
-                await transaction.RollbackAsync();
+                members.AddRange(MapToMembers(booking));
             }
 
-            return new List<Booking>();
-        }
+            var bookingWithMembersAssigned = AssignMembersToBookings(response, members, booking);
 
-        public async Task<BookingsUpdateSignalR> GetBookingsUpdateAsync(int serviceId, DateTime date, string time)
-        {
-            var bookings = await _context.Set<Booking>()
-                .Where(x => x.ServiceId == serviceId
-                    && x.Date.Date == date.Date
-                    && x.Time == time
-                    && x.MemberId == null)
-                .ToListAsync();
-
-            var availableBookings = bookings
-                .Where(x => x.MemberId == null)
-                .ToList();
-
-            var bookingsUpdate = new BookingsUpdateSignalR
-            {
-                ServiceId = serviceId,
-                Total = bookings.Count(),
-                Time = time,
-                AdultsAvailableSlots = availableBookings.Where(x => x.IsAdultSlot).Count(),
-                KidsAvailableSlots = availableBookings.Where(x => x.IsKidSlot).Count(),
-                ToddlersAvailableSlots = availableBookings.Where(x => x.IsToddlerSlot).Count()
-            };
-
-            return bookingsUpdate;
+            return response.ToList();
         }
 
         private Member MapToMember(BookingDTO bookingDTO)
@@ -205,19 +129,7 @@ namespace CheckinPPP.Business
             return isValidBooking;
         }
 
-        public async Task CancelBookingInsertionAsync(CancelledBooking cancelledBooking)
-        {
-            _context.Add<CancelledBooking>(cancelledBooking);
 
-            await _context.SaveChangesAsync();
-        }
-
-        public async Task CancelBookingsInsertionAsync(IEnumerable<CancelledBooking> cancelledBookings)
-        {
-            await _context.AddRangeAsync(cancelledBookings);
-
-            await _context.SaveChangesAsync();
-        }
 
         private List<Member> MapToMembers(BookingDTO bookingDTO)
         {
@@ -239,6 +151,51 @@ namespace CheckinPPP.Business
 
 
             return members;
+        }
+
+        private IEnumerable<Booking> AssignMembersToBookings(IEnumerable<Booking> response, List<Member> members, BookingDTO booking)
+        {
+
+            var groupId = Guid.NewGuid();
+            var bookingReference = Guid.NewGuid();
+
+            var i = 0;
+            foreach (var _booking in response)
+            {
+
+                _booking.Member = members[i];
+                _booking.GroupLinkId = groupId;
+                _booking.BookingReference = bookingReference;
+                _booking.PickUp = booking.Members
+                    .Where(x => x.Name == members[i].Name
+                        && x.Surname == members[i].Surname)
+                    .First().PickUp;
+
+                i++;
+            }
+
+            return response;
+        }
+
+        private (IEnumerable<Member> exists, IEnumerable<Member> notExists) GetAllMemebersInExistingGroupEmail(IEnumerable<Member> existingMembers, List<Member> requestMembers)
+        {
+            var comparer = new MemberEqualityComparer();
+            var notComparer = new NotMemberEqualityComparer();
+
+            // are all the members in db same as the ones in the request
+            var sameMembers = existingMembers.
+                Where(x => requestMembers.Contains(x, comparer))
+                .ToList();
+
+            // no existing: the ones in requestMember and not in existingmember
+            //var notMembers = requestMembers.Except(sameMembers, notComparer);
+
+            var notMembers = requestMembers
+                .Where(x => !sameMembers.Contains(x, comparer))
+                .ToList();
+
+
+            return (sameMembers, notMembers);
         }
     }
 }

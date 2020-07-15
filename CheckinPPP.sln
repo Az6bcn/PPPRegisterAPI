@@ -3,6 +3,8 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheckinPPP", "CheckinPPP.csproj", "{90EB4EC9-587E-4B9D-9F02-AACCBEFE59D0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheckInPPP.Tests", "CheckInPPP.Tests\CheckInPPP.Tests.csproj", "{672C54CF-8A3D-44EF-8F69-5EF4D66DCE1E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -13,5 +15,9 @@ Global
 		{90EB4EC9-587E-4B9D-9F02-AACCBEFE59D0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{90EB4EC9-587E-4B9D-9F02-AACCBEFE59D0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{90EB4EC9-587E-4B9D-9F02-AACCBEFE59D0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{672C54CF-8A3D-44EF-8F69-5EF4D66DCE1E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{672C54CF-8A3D-44EF-8F69-5EF4D66DCE1E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{672C54CF-8A3D-44EF-8F69-5EF4D66DCE1E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{672C54CF-8A3D-44EF-8F69-5EF4D66DCE1E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

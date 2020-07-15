@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Web;
+using CheckinPPP.Models;
+
 namespace CheckinPPP.Data.Entities
 {
     public class Booking
@@ -14,6 +17,8 @@ namespace CheckinPPP.Data.Entities
         public DateTime? SignIn { get; set; }
         public DateTime? SignOut { get; set; }
         public Guid? BookingReference { get; set; }
+        public ApplicationUser User { get; set; }
+        public Guid? UserId { get; set; }
 
         public bool PickUp { get; set; }
         public bool IsAdultSlot { get; set; }
