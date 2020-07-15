@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using CheckinPPP.Data.Entities;
 using CheckinPPP.DTOs;
+using CheckinPPP.Models;
 
 namespace CheckInPPP.Tests.Helpers
 {
@@ -99,6 +100,22 @@ namespace CheckInPPP.Tests.Helpers
                 MemberId = 1,
                 Time = "08:30",
                 PickUp = bookingDTO.Member.PickUp
+            };
+
+            return booking;
+        }
+
+        public static ApplicationUser MapToApplicationuser(BookingDTO bookingDTO)
+        {
+            var booking = new ApplicationUser
+            {
+                Id = Guid.NewGuid().ToString(),
+                Gender = bookingDTO.Member.Gender,
+                Email = bookingDTO.Member.EmailAddress,
+                PhoneNumber = bookingDTO.Member.Mobile,
+                Name = bookingDTO.Member.Name,
+                Surname = bookingDTO.Member.Surname,
+                CreatedAt = DateTime.Now
             };
 
             return booking;

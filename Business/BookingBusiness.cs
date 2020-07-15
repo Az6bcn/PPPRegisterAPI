@@ -8,6 +8,7 @@ using CheckinPPP.Data.Entities;
 using CheckinPPP.Data.Queries;
 using CheckinPPP.DTOs;
 using CheckinPPP.Helpers;
+using CheckinPPP.Models;
 using Microsoft.EntityFrameworkCore;
 
 namespace CheckinPPP.Business
@@ -24,22 +25,32 @@ namespace CheckinPPP.Business
 
         public async Task<Booking> SingleBookingAsync(BookingDTO booking)
         {
-            var response = await _bookingQueries.GetAvailableSingleBookingsAsync(booking, booking.Member.CategoryId);
+            var availableBookingSlot = await _bookingQueries.GetAvailableSingleBookingsAsync(booking, booking.Member.CategoryId);
 
-            if (response is null)
+            if (availableBookingSlot is null)
             {
                 return null;
             }
 
-            response.BookingReference = Guid.NewGuid();
-            response.PickUp = booking.Member.PickUp;
+            availableBookingSlot.BookingReference = Guid.NewGuid();
+            availableBookingSlot.PickUp = booking.Member.PickUp;
 
-            var existsMember = await _bookingQueries.FindMemberByEmailAsync(booking.EmailAddress, booking.Member);
 
-            if (existsMember != null) { response.MemberId = existsMember.Id; }
-            else { response.Member = MapToMember(booking); }
+            if (!string.IsNullOrWhiteSpace(booking.Member.Id))
+            {
+                // find user
+                var user = await _bookingQueries.FindUserByIdAsync(booking.Member.Id);
+                if (user is null) { return null; }
+                availableBookingSlot.UserId = Guid.Parse(user.Id);
+            }
+            else
+            {
+                // create user
+                var userToCreate = MapToApplicationUser(booking);
+                availableBookingSlot.User = userToCreate;
+            }
 
-            return response;
+            return availableBookingSlot;
         }
 
         public async Task<List<Booking>> GroupBookingAsync(BookingDTO booking)
@@ -196,6 +207,22 @@ namespace CheckinPPP.Business
 
 
             return (sameMembers, notMembers);
+        }
+
+        private ApplicationUser MapToApplicationUser(BookingDTO bookingDTO)
+        {
+            var member = new ApplicationUser
+            {
+                Name = bookingDTO.Member.Name,
+                Surname = bookingDTO.Member.Surname,
+                Gender = bookingDTO.Member.Gender,
+                PhoneNumber = bookingDTO.Mobile,
+                Email = bookingDTO.EmailAddress,
+                UserName = bookingDTO.EmailAddress,
+                CreatedAt = DateTime.Now
+            };
+
+            return member;
         }
     }
 }

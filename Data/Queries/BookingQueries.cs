@@ -4,6 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using CheckinPPP.Data.Entities;
 using CheckinPPP.DTOs;
+using CheckinPPP.Models;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace CheckinPPP.Data.Queries
@@ -11,9 +13,12 @@ namespace CheckinPPP.Data.Queries
     public class BookingQueries : IBookingQueries
     {
         private readonly ApplicationDbContext _context;
-        public BookingQueries(ApplicationDbContext context)
+        private readonly UserManager<ApplicationUser> _userManager;
+
+        public BookingQueries(ApplicationDbContext context, UserManager<ApplicationUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         public async Task<IEnumerable<Booking>> GetAvailableBookingsAsync(DateTime date)
@@ -44,6 +49,7 @@ namespace CheckinPPP.Data.Queries
 
             var response = _context.Set<Booking>()
                 .Where(x => x.MemberId == null
+                    && x.UserId == null
                     && x.Date.Date == booking.Date.Date
                     && x.Time == booking.Time);
 
@@ -172,6 +178,12 @@ namespace CheckinPPP.Data.Queries
             return response;
         }
 
+        public async Task<ApplicationUser> FindUserByIdAsync(string Id)
+        {
+            var user = await _userManager.FindByIdAsync(Id);
+            return user;
+        }
+
 
         public async Task<IEnumerable<Member>> FindMembersOfGroupBookingByEmailAsync(string email)
         {
@@ -206,6 +218,14 @@ namespace CheckinPPP.Data.Queries
             };
 
             return bookingsUpdate;
+        }
+
+
+        public async Task<IdentityResult> CreateUserAsnc(ApplicationUser user)
+        {
+            var response = await _userManager.CreateAsync(user);
+
+            return response;
         }
 
     }

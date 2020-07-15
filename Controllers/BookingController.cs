@@ -158,7 +158,7 @@ namespace CheckinPPP.Controllers
 
                 if (singleBooking is null)
                 {
-                    return BadRequest();
+                    return BadRequest("Could not find user");
                 }
 
                 _context.UpdateRange(singleBooking);

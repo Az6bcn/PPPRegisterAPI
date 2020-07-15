@@ -40,7 +40,7 @@ namespace CheckInPPP.Tests.Business
         #region Single Booking
 
         [TestMethod]
-        public async Task SingleBookingWithExistingMemberInDb_WhenCalledWithValidBooking_ShouldReturnObjectWithIdAndMemberId()
+        public async Task SingleBookingWithExistingUserInDb_WhenCalledWithValidBooking_ShouldReturnObjectWithIdAndMemberId()
         {
             // Arrange
             _bookingQueriesMoq
@@ -55,10 +55,10 @@ namespace CheckInPPP.Tests.Business
                 });
 
             _bookingQueriesMoq
-                .Setup(x => x.FindMemberByEmailAsync(It.IsAny<string>(), It.IsAny<MemberDTO>()))
-                .ReturnsAsync((string email, MemberDTO member) =>
+                .Setup(x => x.FindUserByIdAsync(It.IsAny<string>()))
+                .ReturnsAsync((string id) =>
                 {
-                    return BookingsTest.MapToBooking(_validSingleBooking).Member;
+                    return BookingsTest.MapToApplicationuser(_validSingleBooking);
                 });
 
             var bookingBusiness = new BookingBusiness(_bookingQueriesMoq.Object);
@@ -70,13 +70,12 @@ namespace CheckInPPP.Tests.Business
             Assert.IsNotNull(result);
             Assert.AreEqual(result.Id, 1);
             Assert.AreNotEqual(Guid.Empty, result.BookingReference);
-            Assert.IsNotNull(result.MemberId);
             Assert.IsNull(result.Member);
         }
 
 
         [TestMethod]
-        public async Task SingleBookingWithNoneExistingMemberIndB_WhenCalledWithValidBooking_ShouldReturnObjectWithIdAndMember()
+        public async Task SingleBookingWithNoneExistingUserIndB_WhenCalledWithValidBooking_ShouldReturnObjectWithIdAndUser()
         {
             // Arrange
             _bookingQueriesMoq
@@ -91,11 +90,11 @@ namespace CheckInPPP.Tests.Business
                 });
 
             _bookingQueriesMoq
-                .Setup(x => x.FindMemberByEmailAsync(It.IsAny<string>(), It.IsAny<MemberDTO>()))
-                .ReturnsAsync((string email, MemberDTO member) =>
-                {
-                    return null;
-                });
+                .Setup(x => x.FindUserByIdAsync(It.IsAny<string>()))
+                 .ReturnsAsync((string id) =>
+                 {
+                     return null;
+                 });
 
             var bookingBusiness = new BookingBusiness(_bookingQueriesMoq.Object);
 
@@ -104,9 +103,7 @@ namespace CheckInPPP.Tests.Business
 
             // Asset
             Assert.IsNotNull(result);
-            Assert.AreEqual(result.Id, 1);
             Assert.AreNotEqual(Guid.Empty, result.BookingReference);
-            Assert.IsNotNull(result.Member);
         }
 
 

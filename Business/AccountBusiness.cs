@@ -39,7 +39,7 @@ namespace CheckinPPP.Business
         public async Task<IdentityResult> Register(RegisterDTO registerModel)
         {
             var appUser = ParseToAppUser(registerModel);
-            var result = await _userManager.CreateAsync(appUser);
+            var result = await _userManager.CreateAsync(appUser, registerModel.Password);
 
             if (result.Succeeded)
             {
@@ -163,7 +163,7 @@ namespace CheckinPPP.Business
 
         private async Task<SignInResult> SignInUser(ApplicationUser appUser, LoginDTO loginModel)
         {
-            var result = await _signInManager.PasswordSignInAsync(appUser, loginModel.Password, false, true);
+            var result = await _signInManager.PasswordSignInAsync(appUser, loginModel.Password, false, false);
             return result;
         }
 

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using CheckinPPP.Data.Entities;
 using CheckinPPP.DTOs;
+using CheckinPPP.Models;
+using Microsoft.AspNetCore.Identity;
 
 namespace CheckinPPP.Data.Queries
 {
@@ -20,5 +22,7 @@ namespace CheckinPPP.Data.Queries
         Task CancelBookingsAsync(IEnumerable<Booking> booking);
         Task<IEnumerable<Member>> FindMembersOfGroupBookingByEmailAsync(string email);
         Task<BookingsUpdateSignalR> GetBookingsUpdateAsync(int serviceId, DateTime date, string time);
+        Task<ApplicationUser> FindUserByIdAsync(string Id);
+        Task<IdentityResult> CreateUserAsnc(ApplicationUser user);
     }
 }
