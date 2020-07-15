@@ -1,4 +1,6 @@
 ﻿using System;
+using CheckinPPP.Models;
+
 namespace CheckinPPP.Data.Entities
 {
     public class CancelledBooking
@@ -9,5 +11,7 @@ namespace CheckinPPP.Data.Entities
         public int MemberId { get; set; }
         public Booking Booking { get; set; }
         public int BookingId { get; set; }
+        public ApplicationUser User { get; set; }
+        public Guid? UserId { get; set; }
     }
 }

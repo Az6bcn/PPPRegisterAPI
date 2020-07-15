@@ -9,6 +9,7 @@ using CheckinPPP.Data.Queries;
 using CheckinPPP.DTOs;
 using CheckinPPP.Helpers;
 using CheckinPPP.Hubs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
@@ -47,6 +48,7 @@ namespace CheckinPPP.Controllers
         }
 
         [HttpGet("{serviceId}/{date}/{time}")]
+        [Authorize]
         public async Task<IActionResult> GetAvailableBookings(int serviceId, DateTime date, string time)
         {
             var availableBookings = await _bookingQueries.GetAvailableBookingsAsync(serviceId, date, time);
@@ -57,6 +59,7 @@ namespace CheckinPPP.Controllers
         }
 
         [HttpGet("cancellable/{bookingId}")]
+        [Authorize]
         public async Task<IActionResult> GetAvailableBookings(int bookingId)
         {
             var booking = await _bookingQueries.FindBookingByIdAsync(bookingId);
@@ -72,6 +75,7 @@ namespace CheckinPPP.Controllers
         }
 
         [HttpGet("{date}")]
+        [Authorize]
         public async Task<IActionResult> GetAvailableBookings(DateTime date)
         {
             var availableBookings = await _bookingQueries.GetAvailableBookingsAsync(date);
@@ -92,6 +96,7 @@ namespace CheckinPPP.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> BookAppointment([FromBody] BookingDTO booking)
         {
             if (booking is null) { return BadRequest(); }
@@ -278,14 +283,14 @@ namespace CheckinPPP.Controllers
         }
 
 
-        public async Task CancelBookingInsertionAsync(CancelledBooking cancelledBooking)
+        private async Task CancelBookingInsertionAsync(CancelledBooking cancelledBooking)
         {
             _context.Add<CancelledBooking>(cancelledBooking);
 
             await _context.SaveChangesAsync();
         }
 
-        public async Task CancelBookingsInsertionAsync(IEnumerable<CancelledBooking> cancelledBookings)
+        private async Task CancelBookingsInsertionAsync(IEnumerable<CancelledBooking> cancelledBookings)
         {
             await _context.AddRangeAsync(cancelledBookings);
 
