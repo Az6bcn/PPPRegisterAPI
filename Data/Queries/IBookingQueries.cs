@@ -24,5 +24,6 @@ namespace CheckinPPP.Data.Queries
         Task<BookingsUpdateSignalR> GetBookingsUpdateAsync(int serviceId, DateTime date, string time);
         Task<ApplicationUser> FindUserByIdAsync(string Id);
         Task<IdentityResult> CreateUserAsnc(ApplicationUser user);
+        Task<IEnumerable<ApplicationUser>> FindUsersAssignedToMainUserInGroupBokingByEmailAsync(string email);
     }
 }

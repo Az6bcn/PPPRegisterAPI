@@ -121,6 +121,28 @@ namespace CheckInPPP.Tests.Helpers
             return booking;
         }
 
+        public static List<ApplicationUser> MapToApplicationusers(List<Member> members)
+        {
+            var res = new List<ApplicationUser>();
+
+            foreach (var member in members)
+            {
+                res.Add(
+                    new ApplicationUser
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        Gender = member.Gender,
+                        Email = member.EmailAddress,
+                        PhoneNumber = member.Mobile,
+                        Name = member.Name,
+                        Surname = member.Surname,
+                        CreatedAt = DateTime.Now
+                    });
+            }
+
+            return res;
+        }
+
         public static IEnumerable<Booking> AvailablBookings()
         {
             var booking = new List<Booking> {

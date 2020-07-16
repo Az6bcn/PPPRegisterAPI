@@ -12,6 +12,6 @@ namespace CheckinPPP.Data.Entities
         public Booking Booking { get; set; }
         public int BookingId { get; set; }
         public ApplicationUser User { get; set; }
-        public Guid? UserId { get; set; }
+        public string UserId { get; set; }
     }
 }

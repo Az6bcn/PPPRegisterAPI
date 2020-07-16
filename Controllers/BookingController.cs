@@ -111,24 +111,25 @@ namespace CheckinPPP.Controllers
                 {
                     groupBooking = await _bookingBusiness.GroupBookingAsync(booking);
 
-                    if (!groupBooking.Any())
+                    if (groupBooking == null)
                     {
-                        return BadRequest();
+                        return BadRequest("Insufficient slots available to book this group booking");
                     }
 
                     _context.UpdateRange(groupBooking);
 
                     var numbersUpdated = await _context.SaveChangesAsync();
+                    await groupBookingTransaction.CommitAsync();
 
-                    if (numbersUpdated == (booking.Members.Count * 2))
-                    {
-                        await groupBookingTransaction.CommitAsync();
+                    //if (numbersUpdated == (booking.Members.Count * 2))
+                    //{
+                    //    await groupBookingTransaction.CommitAsync();
 
-                    }
-                    else
-                    {
-                        await groupBookingTransaction.RollbackAsync();
-                    }
+                    //}
+                    //else
+                    //{
+                    //    await groupBookingTransaction.RollbackAsync();
+                    //}
 
                     var bookingsUpdate = await _bookingQueries.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
                     await _hubContext.Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate);
@@ -137,7 +138,7 @@ namespace CheckinPPP.Controllers
                     // all have same email, just mesaage anyone of them
                     var personToEmail = groupBooking.First();
 
-                    await _googleMailService.SendBookingConfirmationEmailAsync(personToEmail.Member.EmailAddress, personToEmail);
+                    await _googleMailService.SendBookingConfirmationEmailAsync(personToEmail.User.Email, personToEmail);
                 }
                 catch
                 {
@@ -165,7 +166,11 @@ namespace CheckinPPP.Controllers
 
                 var numbersUpdated = await _context.SaveChangesAsync();
 
-                if (numbersUpdated == 2)
+                if (!string.IsNullOrWhiteSpace(booking.Member.Id) && numbersUpdated == 1)
+                {
+                    await transaction.CommitAsync();
+                }
+                else if (string.IsNullOrWhiteSpace(booking.Member.Id) && numbersUpdated == 2)
                 {
                     await transaction.CommitAsync();
                 }
@@ -178,10 +183,11 @@ namespace CheckinPPP.Controllers
                 var bookingsUpdate2 = await _bookingQueries.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
                 await _hubContext.Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate2);
 
-                await _googleMailService.SendBookingConfirmationEmailAsync(singleBooking.Member.EmailAddress, singleBooking);
+                await _googleMailService.SendBookingConfirmationEmailAsync(singleBooking.User.Email, singleBooking);
             }
-            catch
+            catch (Exception ex)
             {
+                // no hace nada, piensalo bien
                 await transaction.RollbackAsync();
             }
 

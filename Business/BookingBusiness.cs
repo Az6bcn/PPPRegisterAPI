@@ -41,7 +41,7 @@ namespace CheckinPPP.Business
                 // find user
                 var user = await _bookingQueries.FindUserByIdAsync(booking.Member.Id);
                 if (user is null) { return null; }
-                availableBookingSlot.UserId = Guid.Parse(user.Id);
+                availableBookingSlot.UserId = user.Id;
             }
             else
             {
@@ -55,7 +55,7 @@ namespace CheckinPPP.Business
 
         public async Task<List<Booking>> GroupBookingAsync(BookingDTO booking)
         {
-            var members = new List<Member>();
+            var users = new List<ApplicationUser>();
 
             var categoriesInGroupBooking = booking
                 .Members
@@ -63,41 +63,32 @@ namespace CheckinPPP.Business
 
             var response = await _bookingQueries.GetAvailableGroupBookingsAsync(booking, categoriesInGroupBooking);
 
-            if (!response.Any() || response.Count() != booking.Members.Count) { return new List<Booking>(); }
+            if (!response.Any() || response.Count() != booking.Members.Count) { return null; }
 
-            var existsMembers = await _bookingQueries.FindMembersOfGroupBookingByEmailAsync(booking.EmailAddress);
+            // find users assigned to main user's email
+            var assignedMembers = await _bookingQueries.FindUsersAssignedToMainUserInGroupBokingByEmailAsync(booking.EmailAddress);
 
-            if (existsMembers.Any())
+            if (assignedMembers.Any())
             {
                 /// check if all the passed in members are in it
-                var res = GetAllMemebersInExistingGroupEmail(existsMembers, MapToMembers(booking));
+                var res = GetAllMemebersInExistingGroupEmail(assignedMembers, MapToApplicationUsers(booking).ToList());
 
-                if (res.exists.Any()) { members.AddRange(res.exists); }
-                if (res.notExists.Any()) { members.AddRange(MapToMembers(booking)); }
+                //if (res.exists.Any()) { users.AddRange(res.exists); }
+                //if (res.notExists.Any()) { users.AddRange(res.notExists); }
+
+                AssignExistingAndNonExistingUsersToBookings(response.ToList(), res.exists.ToList(), booking, res.notExists.ToList());
+                return response.ToList();
             }
             else
             {
-                members.AddRange(MapToMembers(booking));
+                users.AddRange(MapToApplicationUsers(booking));
             }
 
-            var bookingWithMembersAssigned = AssignMembersToBookings(response, members, booking);
+            var bookingWithMembersAssigned = AssignUsersToBookings(response, users, booking);
 
             return response.ToList();
         }
 
-        private Member MapToMember(BookingDTO bookingDTO)
-        {
-            var member = new Member
-            {
-                Name = bookingDTO.Member.Name,
-                Surname = bookingDTO.Member.Surname,
-                Gender = bookingDTO.Member.Gender,
-                Mobile = bookingDTO.Mobile,
-                EmailAddress = bookingDTO.EmailAddress
-            };
-
-            return member;
-        }
 
         public IEnumerable<BookingDTO> MapToBookingDTOs(IEnumerable<Booking> bookings)
         {
@@ -141,30 +132,7 @@ namespace CheckinPPP.Business
         }
 
 
-
-        private List<Member> MapToMembers(BookingDTO bookingDTO)
-        {
-            var members = new List<Member>();
-
-            foreach (var member in bookingDTO.Members)
-            {
-                members.Add(
-                    new Member
-                    {
-                        Name = member.Name,
-                        Surname = member.Surname,
-                        Gender = member.Gender,
-                        Mobile = bookingDTO.Mobile,
-                        EmailAddress = bookingDTO.EmailAddress
-                    }
-               );
-            }
-
-
-            return members;
-        }
-
-        private IEnumerable<Booking> AssignMembersToBookings(IEnumerable<Booking> response, List<Member> members, BookingDTO booking)
+        private IEnumerable<Booking> AssignUsersToBookings(IEnumerable<Booking> response, List<ApplicationUser> users, BookingDTO booking)
         {
 
             var groupId = Guid.NewGuid();
@@ -174,12 +142,12 @@ namespace CheckinPPP.Business
             foreach (var _booking in response)
             {
 
-                _booking.Member = members[i];
+                _booking.User = users[i];
                 _booking.GroupLinkId = groupId;
                 _booking.BookingReference = bookingReference;
                 _booking.PickUp = booking.Members
-                    .Where(x => x.Name == members[i].Name
-                        && x.Surname == members[i].Surname)
+                    .Where(x => x.Name == users[i].Name
+                        && x.Surname == users[i].Surname)
                     .First().PickUp;
 
                 i++;
@@ -188,10 +156,52 @@ namespace CheckinPPP.Business
             return response;
         }
 
-        private (IEnumerable<Member> exists, IEnumerable<Member> notExists) GetAllMemebersInExistingGroupEmail(IEnumerable<Member> existingMembers, List<Member> requestMembers)
+        private IEnumerable<Booking> AssignExistingAndNonExistingUsersToBookings(List<Booking> response, List<ApplicationUser> existingUsers, BookingDTO booking, List<ApplicationUser> nonExistingUsers)
+        {
+
+            var added = new List<int>();
+            var groupId = Guid.NewGuid();
+            var bookingReference = Guid.NewGuid();
+
+            for (int i = 1; i <= existingUsers.Count(); i++)
+            {
+                response[i - 1].UserId = existingUsers[i - 1].Id;
+                response[i - 1].GroupLinkId = groupId;
+                response[i - 1].BookingReference = bookingReference;
+                response[i - 1].PickUp = booking.Members
+                    .Where(x => x.Name == existingUsers[i - 1].Name
+                        && x.Surname == existingUsers[i - 1].Surname)
+                    .First().PickUp;
+
+                added.Add(response[i - 1].Id);
+            }
+
+            var leftBookings = response
+                .Where(x => !added.Contains(x.Id))
+                .ToList();
+
+
+            var j = 0;
+            foreach (var _booking in leftBookings)
+            {
+                _booking.User = nonExistingUsers[j];
+                _booking.GroupLinkId = groupId;
+                _booking.BookingReference = bookingReference;
+                _booking.PickUp = booking.Members
+                    .Where(x => x.Name == nonExistingUsers[j].Name
+                        && x.Surname == nonExistingUsers[j].Surname)
+                    .First().PickUp;
+
+                j++;
+            }
+
+            return response;
+        }
+
+        private (IEnumerable<ApplicationUser> exists, IEnumerable<ApplicationUser> notExists) GetAllMemebersInExistingGroupEmail(IEnumerable<ApplicationUser> existingMembers, List<ApplicationUser> requestMembers)
         {
             var comparer = new MemberEqualityComparer();
-            var notComparer = new NotMemberEqualityComparer();
+            var notComparer = new DistinctEqualityComparer();
 
             // are all the members in db same as the ones in the request
             var sameMembers = existingMembers.
@@ -223,6 +233,29 @@ namespace CheckinPPP.Business
             };
 
             return member;
+        }
+
+        private IEnumerable<ApplicationUser> MapToApplicationUsers(BookingDTO bookingDTO)
+        {
+            var users = new List<ApplicationUser>();
+
+            foreach (var member in bookingDTO.Members)
+            {
+                users.Add(
+                    new ApplicationUser
+                    {
+                        Name = member.Name,
+                        Surname = member.Surname,
+                        Gender = member.Gender,
+                        PhoneNumber = bookingDTO.Mobile,
+                        Email = bookingDTO.EmailAddress,
+                        UserName = bookingDTO.EmailAddress,
+                        CreatedAt = DateTime.Now
+                    }
+               );
+            }
+
+            return users;
         }
     }
 }

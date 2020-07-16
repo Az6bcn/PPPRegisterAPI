@@ -73,11 +73,11 @@ namespace CheckinPPP.Helpers
         private string HtmlTemplate(Booking booking, string email)
         {
             var template = $"<h3>Booking Confirmation</h3>" +
-                $"<p>Dear {booking.Member.Name} {booking.Member.Surname}, </p> " +
+                $"<p>Dear {booking.User.Name} {booking.User.Surname}, </p> " +
                 $"<p> Your booking reference is {booking.BookingReference}, your reservation to come to church on the <strong>{booking.Date.Date}</strong> for the time slot <strong>{booking.Time}</strong> has been confirmed.</p>" +
                 $"<p> To cancel this booking, please click on the button below. " +
                 $"</p>" +
-                $"<a href=\"{ new Uri($"{_mailSettings.ReturnUri}?bookingId={booking.Id}&email={email}&name={booking.Member.Name}&surname={booking.Member.Surname}")}\"> Cancel </a>" +
+                $"<a href=\"{ new Uri($"{_mailSettings.ReturnUri}?bookingId={booking.Id}&email={email}&name={booking.User.Name}&surname={booking.User.Surname}")}\"> Cancel </a>" +
                 $"</br >" +
                 $"<p> Precious People Parish </p>" +
                 $"<p> 0161 835 9000, 07535 703 955 </p>";

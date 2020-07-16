@@ -6,6 +6,7 @@ using CheckinPPP.Business;
 using CheckinPPP.Data.Entities;
 using CheckinPPP.Data.Queries;
 using CheckinPPP.DTOs;
+using CheckinPPP.Models;
 using CheckInPPP.Tests.Helpers;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
@@ -148,7 +149,7 @@ namespace CheckInPPP.Tests.Business
                 });
 
             _bookingQueriesMoq
-                .Setup(x => x.FindMembersOfGroupBookingByEmailAsync(It.IsAny<string>()))
+                .Setup(x => x.FindUsersAssignedToMainUserInGroupBokingByEmailAsync(It.IsAny<string>()))
                 .ReturnsAsync((string email) =>
                 {
                     var res = _existingGroupBooking
@@ -157,7 +158,9 @@ namespace CheckInPPP.Tests.Business
                     .Select(x => x.Member)
                     .ToList();
 
-                    return res;
+                    var response = BookingsTest.MapToApplicationusers(res);
+
+                    return response;
                 });
 
             var bookingBusiness = new BookingBusiness(_bookingQueriesMoq.Object);
@@ -188,10 +191,10 @@ namespace CheckInPPP.Tests.Business
                 });
 
             _bookingQueriesMoq
-                .Setup(x => x.FindMembersOfGroupBookingByEmailAsync(It.IsAny<string>()))
+                .Setup(x => x.FindUsersAssignedToMainUserInGroupBokingByEmailAsync(It.IsAny<string>()))
                 .ReturnsAsync((string email) =>
                 {
-                    return new List<Member>();
+                    return new List<ApplicationUser>();
                 });
 
             var bookingBusiness = new BookingBusiness(_bookingQueriesMoq.Object);
@@ -225,7 +228,7 @@ namespace CheckInPPP.Tests.Business
                 });
 
             _bookingQueriesMoq
-                .Setup(x => x.FindMembersOfGroupBookingByEmailAsync(It.IsAny<string>()))
+                .Setup(x => x.FindUsersAssignedToMainUserInGroupBokingByEmailAsync(It.IsAny<string>()))
                 .ReturnsAsync((string email) =>
                 {
                     var res = _existingGroupBookingMemberMissing
@@ -234,7 +237,9 @@ namespace CheckInPPP.Tests.Business
                     .Select(x => x.Member)
                     .ToList();
 
-                    return res;
+                    var response = BookingsTest.MapToApplicationusers(res);
+
+                    return response;
                 });
 
             var bookingBusiness = new BookingBusiness(_bookingQueriesMoq.Object);
