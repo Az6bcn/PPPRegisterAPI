@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 using CheckinPPP.Data;
 using CheckinPPP.Data.Entities;
 using CheckinPPP.DTOs;
+using CheckinPPP.Hubs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
@@ -16,10 +18,15 @@ namespace CheckinPPP.Controllers
     public class CheckedInmembersController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private IHubContext<PreciousPeopleHub, IPreciousPeopleClient> _hubContext { get; }
 
-        public CheckedInmembersController(ApplicationDbContext context)
+        public CheckedInmembersController(
+            ApplicationDbContext context,
+            IHubContext<PreciousPeopleHub,
+            IPreciousPeopleClient> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
 
@@ -111,6 +118,20 @@ namespace CheckinPPP.Controllers
             _context.Update(result);
 
             await _context.SaveChangesAsync();
+
+
+
+            var bookings = await _context.Set<Booking>()
+                .Include(x => x.User)
+                .Where(x => x.Date.Date == data.date.Date
+                    && x.UserId != null
+                    && x.ServiceId == data.ServiceId)
+                .OrderBy(x => x.User.Surname)
+                .ToListAsync();
+
+            var mappedResult = ParseToCheckedInMemeberDTO(bookings);
+
+            await _hubContext.Clients.All.ReceivedBookingsToSignInUpdateAsync(mappedResult);
 
             return Ok(MapToSignInOutResponseDTO(result, true));
         }

@@ -177,7 +177,8 @@ namespace CheckinPPP.Business
                     EmailAddress = mainUser.Email,
                     Name = mainUser.Name,
                     Surname = mainUser.Surname,
-                    Gender = mainUser.Gender
+                    Gender = mainUser.Gender,
+                    CategoryId = mainUser.CategoryId
                 },
                 LinkedUsers = GetMemberDTOs(linkedUsers)
             };
@@ -198,7 +199,8 @@ namespace CheckinPPP.Business
                         EmailAddress = user.Email,
                         Name = user.Name,
                         Surname = user.Surname,
-                        Gender = user.Gender
+                        Gender = user.Gender,
+                        CategoryId = user.CategoryId
                     });
             }
 

@@ -229,7 +229,8 @@ namespace CheckinPPP.Business
                 PhoneNumber = bookingDTO.Mobile,
                 Email = bookingDTO.EmailAddress,
                 UserName = bookingDTO.EmailAddress,
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.Now,
+                CategoryId = bookingDTO.Member.CategoryId
             };
 
             return member;
@@ -250,7 +251,8 @@ namespace CheckinPPP.Business
                         PhoneNumber = bookingDTO.Mobile,
                         Email = bookingDTO.EmailAddress,
                         UserName = bookingDTO.EmailAddress,
-                        CreatedAt = DateTime.Now
+                        CreatedAt = DateTime.Now,
+                        CategoryId = member.CategoryId
                     }
                );
             }

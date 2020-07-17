@@ -16,6 +16,7 @@ namespace CheckinPPP.Models
         public string Name { get; set; }
         public string Surname { get; set; }
         public string Gender { get; set; }
+        public int CategoryId { get; set; }
         public DateTime CreatedAt { get; set; }
         public List<Booking> Bookings { get; set; }
         public List<CancelledBooking> CancelledBookings { get; set; }

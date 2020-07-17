@@ -74,7 +74,6 @@ namespace CheckinPPP.Controllers
         [HttpGet("user/{id}")]
         public async Task<IActionResult> GetUserAndLinkedUsers(Guid id)
         {
-            var xxx = HttpContext;
             var token = Request.Headers[HeaderNames.Authorization];
             var response = await accountBusiness.GetUserAndLinkedUsers(id);
 

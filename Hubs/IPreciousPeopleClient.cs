@@ -12,5 +12,6 @@ namespace CheckinPPP.Hubs
         Task UpdateCheckedInMembersAsync(CheckedInMemberDTO checkedInMembers);
         Task UpdateSlotsAvailableAsync(DateTime date);
         Task ReceivedBookingsUpdateAsync(BookingsUpdateSignalR availableBookings);
+        Task ReceivedBookingsToSignInUpdateAsync(List<CheckedInMemberDTO> bookings);
     }
 }
