@@ -41,10 +41,10 @@ namespace CheckinPPP.Controllers
             if (!result.Succeeded)
             {
                 var errors = result.Errors.Select(x => x.Description).ToList();
-                return BadRequest($"{errors}");
+                return BadRequest(errors);
             }
 
-            return Ok();
+            return Ok(new { success = true });
         }
 
         [HttpPost("login")]
@@ -61,7 +61,7 @@ namespace CheckinPPP.Controllers
             if (!result.Succeeded)
             {
                 var errors = result.Errors.Select(x => x.Description).ToList();
-                return BadRequest($"{errors}");
+                return BadRequest(errors);
             }
 
             // generte token

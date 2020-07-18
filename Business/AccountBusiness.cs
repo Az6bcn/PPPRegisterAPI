@@ -132,7 +132,8 @@ namespace CheckinPPP.Business
                 Surname = register.Surname,
                 Gender = register.Gender,
                 UserName = register.Email,
-                PhoneNumber = register.Mobile
+                PhoneNumber = register.Mobile,
+                CategoryId = register.CategoryId
             };
         }
 
