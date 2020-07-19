@@ -7,8 +7,6 @@ namespace CheckinPPP.Data.Entities
     {
         public int Id { get; set; }
         public DateTime CancelledAt { get; set; }
-        public Member Member { get; set; }
-        public int MemberId { get; set; }
         public Booking Booking { get; set; }
         public int BookingId { get; set; }
         public ApplicationUser User { get; set; }

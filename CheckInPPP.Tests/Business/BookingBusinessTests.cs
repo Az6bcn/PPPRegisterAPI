@@ -21,7 +21,7 @@ namespace CheckInPPP.Tests.Business
         private BookingDTO _validSingleBooking;
         private BookingDTO _validGroupBooking;
         private IEnumerable<Booking> _existingGroupBooking;
-        private IEnumerable<Booking> _existingGroupBookingMemberMissing;
+        private IEnumerable<Booking> _existingGroupBookingUserMissing;
         private Guid groupId = Guid.NewGuid();
 
         [TestInitialize]
@@ -35,13 +35,13 @@ namespace CheckInPPP.Tests.Business
             // group bookings
             _validGroupBooking = BookingsTest.GetGroupBooking();
             _existingGroupBooking = BookingsTest.ExistingGroupBookings(groupId);
-            _existingGroupBookingMemberMissing = BookingsTest.ExistingGroupBookingsLastMemberMissing(groupId);
+            _existingGroupBookingUserMissing = BookingsTest.ExistingGroupBookingsLastUserMissing(groupId);
         }
 
         #region Single Booking
 
         [TestMethod]
-        public async Task SingleBookingWithExistingUserInDb_WhenCalledWithValidBooking_ShouldReturnObjectWithIdAndMemberId()
+        public async Task SingleBookingWithExistingUserInDb_WhenCalledWithValidBooking_ShouldReturnObjectWithIdAndUserId()
         {
             // Arrange
             _bookingQueriesMoq
@@ -71,7 +71,7 @@ namespace CheckInPPP.Tests.Business
             Assert.IsNotNull(result);
             Assert.AreEqual(result.Id, 1);
             Assert.AreNotEqual(Guid.Empty, result.BookingReference);
-            Assert.IsNull(result.Member);
+            Assert.IsNotNull(result.User);
         }
 
 
@@ -132,7 +132,7 @@ namespace CheckInPPP.Tests.Business
 
         #region Group Booking
         [TestMethod]
-        public async Task GroupBookingWithExistingMemberInDb_WhenCalled_ShouldReturnObjectWithIdAndMembers()
+        public async Task GroupBookingWithExistingUserInDb_WhenCalled_ShouldReturnObjectWithIdAndUsers()
         {
             // Arrange
             var categoriesId = _validGroupBooking.Members.Select(x => x.CategoryId).ToList();
@@ -155,12 +155,12 @@ namespace CheckInPPP.Tests.Business
                     var res = _existingGroupBooking
                     .Where(x => x.ServiceId == 1
                         && x.IsAdultSlot && x.GroupLinkId == groupId)
-                    .Select(x => x.Member)
+                    .Select(x => x.User)
                     .ToList();
 
-                    var response = BookingsTest.MapToApplicationusers(res);
+                    //var response = BookingsTest.MapToApplicationusers(res);
 
-                    return response;
+                    return res;
                 });
 
             var bookingBusiness = new BookingBusiness(_bookingQueriesMoq.Object);
@@ -174,7 +174,7 @@ namespace CheckInPPP.Tests.Business
         }
 
         [TestMethod]
-        public async Task GroupBookingWithNoneExistingMemberInDb_WhenCalled_ShouldReturnObjectWithIdAndAllMembers()
+        public async Task GroupBookingWithNoneExistingUserInDb_WhenCalled_ShouldReturnObjectWithIdAndAllUsers()
         {
             // Arrange
             var categoriesId = _validGroupBooking.Members.Select(x => x.CategoryId).ToList();
@@ -204,14 +204,14 @@ namespace CheckInPPP.Tests.Business
 
             // Asset
             Assert.IsNotNull(result);
-            Assert.AreEqual(result.Select(x => x.Member).Count(), 3);
+            Assert.AreEqual(result.Select(x => x.User).Count(), 3);
             Assert.AreNotEqual(result.Select(x => x.BookingReference), Guid.Empty);
             Assert.AreNotEqual(result.Select(x => x.BookingReference), null);
         }
 
 
         [TestMethod]
-        public async Task GroupBookingWithSomeExistingMemberInDb_WhenCalled_ShouldReturnObjectWithIdAndAllMembers()
+        public async Task GroupBookingWithSomeExistingUserInDb_WhenCalled_ShouldReturnObjectWithIdAndAllUsers()
         {
             // Arrange
             var categoriesId = _validGroupBooking.Members.Select(x => x.CategoryId).ToList();
@@ -231,15 +231,15 @@ namespace CheckInPPP.Tests.Business
                 .Setup(x => x.FindUsersAssignedToMainUserInGroupBokingByEmailAsync(It.IsAny<string>()))
                 .ReturnsAsync((string email) =>
                 {
-                    var res = _existingGroupBookingMemberMissing
+                    var res = _existingGroupBookingUserMissing
                     .Where(x => x.ServiceId == 1
                         && x.IsAdultSlot && x.GroupLinkId == groupId)
-                    .Select(x => x.Member)
+                    .Select(x => x.User)
                     .ToList();
 
-                    var response = BookingsTest.MapToApplicationusers(res);
+                    //var response = BookingsTest.MapToApplicationusers(res);
 
-                    return response;
+                    return res;
                 });
 
             var bookingBusiness = new BookingBusiness(_bookingQueriesMoq.Object);
@@ -249,7 +249,7 @@ namespace CheckInPPP.Tests.Business
 
             // Asset
             Assert.IsNotNull(result);
-            Assert.AreEqual(result.Select(x => x.Member).Count(), 3);
+            Assert.AreEqual(result.Select(x => x.User).Count(), 3);
         }
 
         #endregion

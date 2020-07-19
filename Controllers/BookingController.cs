@@ -59,12 +59,11 @@ namespace CheckinPPP.Controllers
         }
 
         [HttpGet("cancellable/{bookingId}")]
-        [Authorize]
         public async Task<IActionResult> GetAvailableBookings(int bookingId)
         {
             var booking = await _bookingQueries.FindBookingByIdAsync(bookingId);
 
-            if (booking.MemberId is null)
+            if (booking.UserId is null)
             {
                 return Ok(new { cancellable = false });
             }
@@ -219,7 +218,7 @@ namespace CheckinPPP.Controllers
 
                 foreach (var _booking in groupBookings)
                 {
-                    _booking.MemberId = null;
+                    _booking.UserId = null;
                     _booking.BookingReference = null;
                     _booking.GroupLinkId = null;
                 }
@@ -229,7 +228,7 @@ namespace CheckinPPP.Controllers
             }
             else
             {
-                booking.MemberId = null;
+                booking.UserId = null;
                 await CancelInsertions(booking);
                 await _bookingQueries.CancelBookingAsync(booking);
             }
@@ -263,7 +262,7 @@ namespace CheckinPPP.Controllers
             var cancelledBooking = new CancelledBooking
             {
                 BookingId = booking.Id,
-                Member = booking.Member,
+                User = booking.User,
                 CancelledAt = DateTime.Now
             };
 
@@ -280,7 +279,7 @@ namespace CheckinPPP.Controllers
                 new CancelledBooking
                 {
                     BookingId = booking.Id,
-                    Member = booking.Member,
+                    User = booking.User,
                     CancelledAt = DateTime.Now
                 });
             }

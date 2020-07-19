@@ -80,6 +80,7 @@ namespace CheckInPPP.Tests.Helpers
 
         public static Booking MapToBooking(BookingDTO bookingDTO)
         {
+            var id = Guid.NewGuid().ToString();
             var booking = new Booking
             {
                 Id = 1,
@@ -87,17 +88,17 @@ namespace CheckInPPP.Tests.Helpers
                 IsAdultSlot = true,
                 //BookingReference = Guid.NewGuid(),
                 Date = bookingDTO.Date,
-                Member = new Member
+                User = new ApplicationUser
                 {
-                    Id = 1,
+                    Id = id,
                     Gender = bookingDTO.Member.Gender,
-                    EmailAddress = bookingDTO.Member.EmailAddress,
-                    Mobile = bookingDTO.Member.Mobile,
+                    Email = bookingDTO.Member.EmailAddress,
+                    PhoneNumber = bookingDTO.Member.Mobile,
                     Name = bookingDTO.Member.Name,
                     Surname = bookingDTO.Member.Surname,
                     CreatedAt = DateTime.Now
                 },
-                MemberId = 1,
+                UserId = id,
                 Time = "08:30",
                 PickUp = bookingDTO.Member.PickUp
             };
@@ -121,21 +122,21 @@ namespace CheckInPPP.Tests.Helpers
             return booking;
         }
 
-        public static List<ApplicationUser> MapToApplicationusers(List<Member> members)
+        public static List<ApplicationUser> MapToApplicationusers(List<Member> Users)
         {
             var res = new List<ApplicationUser>();
 
-            foreach (var member in members)
+            foreach (var User in Users)
             {
                 res.Add(
                     new ApplicationUser
                     {
                         Id = Guid.NewGuid().ToString(),
-                        Gender = member.Gender,
-                        Email = member.EmailAddress,
-                        PhoneNumber = member.Mobile,
-                        Name = member.Name,
-                        Surname = member.Surname,
+                        Gender = User.Gender,
+                        Email = User.EmailAddress,
+                        PhoneNumber = User.Mobile,
+                        Name = User.Name,
+                        Surname = User.Surname,
                         CreatedAt = DateTime.Now
                     });
             }
@@ -153,7 +154,7 @@ namespace CheckInPPP.Tests.Helpers
                     IsAdultSlot = true,
                     BookingReference = null,
                     Date = DateTime.Now.AddDays(3),
-                    Member = null,
+                    User = null,
                     Time = "08:30",
                     PickUp = false
                 },
@@ -164,7 +165,7 @@ namespace CheckInPPP.Tests.Helpers
                     IsAdultSlot = true,
                     BookingReference = null,
                     Date = DateTime.Now.AddDays(3),
-                    Member = null,
+                    User = null,
                     Time = "08:30",
                     PickUp = false
                 },
@@ -175,7 +176,7 @@ namespace CheckInPPP.Tests.Helpers
                     IsAdultSlot = true,
                     BookingReference = null,
                     Date = DateTime.Now.AddDays(3),
-                    Member = null,
+                    User = null,
                     Time = "08:30",
                     PickUp = false
                 },
@@ -186,7 +187,7 @@ namespace CheckInPPP.Tests.Helpers
                     IsAdultSlot = true,
                     BookingReference = null,
                     Date = DateTime.Now.AddDays(3),
-                    Member = null,
+                    User = null,
                     Time = "08:30",
                     PickUp = false
                 },
@@ -197,7 +198,7 @@ namespace CheckInPPP.Tests.Helpers
                     IsKidSlot = true,
                     BookingReference = null,
                     Date = DateTime.Now.AddDays(3),
-                    Member = null,
+                    User = null,
                     Time = "08:30",
                     PickUp = false
                 },
@@ -208,7 +209,7 @@ namespace CheckInPPP.Tests.Helpers
                     IsToddlerSlot = true,
                     BookingReference = null,
                     Date = DateTime.Now.AddDays(3),
-                    Member = null,
+                    User = null,
                     Time = "08:30",
                     PickUp = false
                 },
@@ -219,7 +220,7 @@ namespace CheckInPPP.Tests.Helpers
                     IsAdultSlot = true,
                     BookingReference = null,
                     Date = DateTime.Now.AddDays(3),
-                    Member = null,
+                    User = null,
                     Time = "10:10",
                     PickUp = false
                 },
@@ -230,7 +231,7 @@ namespace CheckInPPP.Tests.Helpers
                     IsKidSlot = true,
                     BookingReference = null,
                     Date = DateTime.Now.AddDays(3),
-                    Member = null,
+                    User = null,
                     Time = "10:10",
                     PickUp = false
                 },
@@ -241,7 +242,7 @@ namespace CheckInPPP.Tests.Helpers
                     IsToddlerSlot = true,
                     BookingReference = null,
                     Date = DateTime.Now.AddDays(3),
-                    Member = null,
+                    User = null,
                     Time = "10:10",
                     PickUp = false
                 },
@@ -252,7 +253,7 @@ namespace CheckInPPP.Tests.Helpers
                     IsAdultSlot = true,
                     BookingReference = null,
                     Date = DateTime.Now.AddDays(3),
-                    Member = null,
+                    User = null,
                     Time = "11:50",
                     PickUp = false
                 },
@@ -263,7 +264,7 @@ namespace CheckInPPP.Tests.Helpers
                     IsKidSlot = true,
                     BookingReference = null,
                     Date = DateTime.Now.AddDays(3),
-                    Member = null,
+                    User = null,
                     Time = "11:50",
                     PickUp = false
                 },
@@ -274,7 +275,7 @@ namespace CheckInPPP.Tests.Helpers
                     IsToddlerSlot = true,
                     BookingReference = null,
                     Date = DateTime.Now.AddDays(3),
-                    Member = null,
+                    User = null,
                     Time = "11:50",
                     PickUp = false
                 },
@@ -298,12 +299,12 @@ namespace CheckInPPP.Tests.Helpers
                     Time = "08:30",
                     PickUp = false,
                     GroupLinkId = groupId,
-                    Member = new Member
+                    User = new ApplicationUser
                     {
-                        Id = 1,
-                        EmailAddress = "a@a.com",
+                        Id = Guid.NewGuid().ToString(),
+                        Email = "a@a.com",
                         Gender = "Male",
-                        Mobile = "0000000000000",
+                        PhoneNumber = "0000000000000",
                         Name = "azeez",
                         Surname = "odumosu"
                     }
@@ -318,12 +319,12 @@ namespace CheckInPPP.Tests.Helpers
                     Time = "08:30",
                     PickUp = false,
                     GroupLinkId = groupId,
-                    Member = new Member
+                    User = new ApplicationUser
                     {
-                        Id = 2,
-                        EmailAddress = "a@a.com",
+                        Id = Guid.NewGuid().ToString(),
+                        Email = "a@a.com",
                         Gender = "Male",
-                        Mobile = "0000000000000",
+                        PhoneNumber = "0000000000000",
                         Name = "larry",
                         Surname = "odumosu"
                     }
@@ -338,12 +339,12 @@ namespace CheckInPPP.Tests.Helpers
                     Time = "08:30",
                     PickUp = false,
                     GroupLinkId = groupId,
-                    Member = new Member
+                    User = new ApplicationUser
                     {
-                        Id = 3,
-                        EmailAddress = "a@a.com",
+                        Id = Guid.NewGuid().ToString(),
+                        Email = "a@a.com",
                         Gender = "Male",
-                        Mobile = "0000000000000",
+                        PhoneNumber = "0000000000000",
                         Name = "sergio",
                         Surname = "odumosu"
                     }
@@ -355,7 +356,7 @@ namespace CheckInPPP.Tests.Helpers
                     IsAdultSlot = true,
                     BookingReference = null,
                     Date = DateTime.Now.AddDays(3),
-                    Member = null,
+                    User = null,
                     Time = "08:30",
                     PickUp = false
                 },
@@ -366,7 +367,7 @@ namespace CheckInPPP.Tests.Helpers
                     IsKidSlot = true,
                     BookingReference = null,
                     Date = DateTime.Now.AddDays(3),
-                    Member = null,
+                    User = null,
                     Time = "08:30",
                     PickUp = false
                 },
@@ -377,7 +378,7 @@ namespace CheckInPPP.Tests.Helpers
                     IsToddlerSlot = true,
                     BookingReference = null,
                     Date = DateTime.Now.AddDays(3),
-                    Member = null,
+                    User = null,
                     Time = "08:30",
                     PickUp = false
                 }
@@ -385,7 +386,7 @@ namespace CheckInPPP.Tests.Helpers
 
             return booking;
         }
-        public static IEnumerable<Booking> ExistingGroupBookingsLastMemberMissing(Guid _groupId)
+        public static IEnumerable<Booking> ExistingGroupBookingsLastUserMissing(Guid _groupId)
         {
             var groupId = _groupId;
 
@@ -400,12 +401,12 @@ namespace CheckInPPP.Tests.Helpers
                     Time = "08:30",
                     PickUp = false,
                     GroupLinkId = groupId,
-                    Member = new Member
+                    User = new ApplicationUser
                     {
-                        Id = 1,
-                        EmailAddress = "a@a.com",
+                        Id = Guid.NewGuid().ToString(),
+                        Email = "a@a.com",
                         Gender = "Male",
-                        Mobile = "0000000000000",
+                        PhoneNumber = "0000000000000",
                         Name = "azeez",
                         Surname = "odumosu"
                     }
@@ -420,12 +421,12 @@ namespace CheckInPPP.Tests.Helpers
                     Time = "08:30",
                     PickUp = false,
                     GroupLinkId = groupId,
-                    Member = new Member
+                    User = new ApplicationUser
                     {
-                        Id = 2,
-                        EmailAddress = "a@a.com",
+                        Id = Guid.NewGuid().ToString(),
+                        Email = "a@a.com",
                         Gender = "Male",
-                        Mobile = "0000000000000",
+                        PhoneNumber = "0000000000000",
                         Name = "larry",
                         Surname = "odumosu"
                     }
@@ -437,7 +438,7 @@ namespace CheckInPPP.Tests.Helpers
                     IsAdultSlot = true,
                     BookingReference = null,
                     Date = DateTime.Now.AddDays(3),
-                    Member = null,
+                    User = null,
                     Time = "08:30",
                     PickUp = false
                 },
@@ -448,7 +449,7 @@ namespace CheckInPPP.Tests.Helpers
                     IsKidSlot = true,
                     BookingReference = null,
                     Date = DateTime.Now.AddDays(3),
-                    Member = null,
+                    User = null,
                     Time = "08:30",
                     PickUp = false
                 },
@@ -459,7 +460,7 @@ namespace CheckInPPP.Tests.Helpers
                     IsToddlerSlot = true,
                     BookingReference = null,
                     Date = DateTime.Now.AddDays(3),
-                    Member = null,
+                    User = null,
                     Time = "08:30",
                     PickUp = false
                 }

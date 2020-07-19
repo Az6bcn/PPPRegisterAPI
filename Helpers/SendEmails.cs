@@ -26,7 +26,7 @@ namespace CheckinPPP.Helpers
             request.AddParameter("domain", $"{_emailOptions.RequestUri}", ParameterType.UrlSegment);
             request.Resource = "{domain}/messages";
             request.AddParameter("from", $"{_emailOptions.From}");
-            request.AddParameter("to", $"{booking.Member.Name} {booking.Member.Surname} <{email}>");
+            request.AddParameter("to", $"{booking.User.Name} {booking.User.Surname} <{email}>");
             request.AddParameter("subject", $"Booking Confirmation for {booking.Date.Date.Add(GetTime(booking))}");
             request.AddParameter("html", $"<html>{EncodeHtmlTemplate(booking, email)}</html>");
             request.Method = Method.POST;
@@ -43,9 +43,9 @@ namespace CheckinPPP.Helpers
             request.AddParameter("domain", $"{_emailOptions.RequestUri}", ParameterType.UrlSegment);
             request.Resource = "{domain}/messages";
             request.AddParameter("from", $"{_emailOptions.From}");
-            request.AddParameter("to", $"{booking.Member.Name} {booking.Member.Surname} <{email}>");
+            request.AddParameter("to", $"{booking.User.Name} {booking.User.Surname} <{email}>");
             request.AddParameter("subject", $"Booking Cancellaction for {booking.Date.Date.Add(GetTime(booking))}");
-            request.AddParameter("text", $" Dear {booking.Member.Name} {booking.Member.Surname}, " +
+            request.AddParameter("text", $" Dear {booking.User.Name} {booking.User.Surname}, " +
                 $"Your booking to come to church on the {booking.Date.Date} for the time slot {booking.Time} has been cancelled.");
             request.Method = Method.POST;
             return client.Execute(request);
@@ -72,11 +72,11 @@ namespace CheckinPPP.Helpers
         private string EncodeHtmlTemplate(Booking booking, string email)
         {
             var template = $"<h3>Booking Confirmation</h3>" +
-                $"<p>Dear {booking.Member.Name} {booking.Member.Surname}, </p> " +
+                $"<p>Dear {booking.User.Name} {booking.User.Surname}, </p> " +
                 $"<p> Your booking reference is {booking.BookingReference}, your reservation to come to church on the <strong>{booking.Date.Date}</strong> for the time slot <strong>{booking.Time}</strong> has been confirmed.</p>" +
                 $"<p> To cancel this booking, please click on the button below. " +
                 $"</p>" +
-                $"<button type=\"submit\"><a href=\"{ new Uri($"{_emailOptions.ReturnUri}?bookingId={booking.Id}&email={email}&name={booking.Member.Name}&surname={booking.Member.Surname}")}\"> Cancel </a> </button>" +
+                $"<button type=\"submit\"><a href=\"{ new Uri($"{_emailOptions.ReturnUri}?bookingId={booking.Id}&email={email}&name={booking.User.Name}&surname={booking.User.Surname}")}\"> Cancel </a> </button>" +
                 $"</br >" +
                 $"<p> Precious People Parish </p>" +
                 $"<p> 0161 835 9000, 07535 703 955 </p>";
