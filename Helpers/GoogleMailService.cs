@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
@@ -40,11 +41,14 @@ namespace CheckinPPP.Helpers
 
         public async Task SendBookingConfirmationEmailAsync(string email, Booking booking)
         {
+            var date = DateTime.ParseExact(booking.Date.Date.Add(GetTime(booking)).ToString(), "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+            var dateString = date.ToString("dd/MM/yyyy");
+
             MailMessage message = new MailMessage();
             SmtpClient smtp = new SmtpClient();
             message.From = new MailAddress(_mailSettings.Mail, _mailSettings.DisplayName);
             message.To.Add(new MailAddress(email));
-            message.Subject = $"Booking Confirmation for {booking.Date.Date.Add(GetTime(booking))}";
+            message.Subject = $"Booking Confirmation for {dateString}";
 
             message.IsBodyHtml = false;
             message.IsBodyHtml = true;
@@ -72,9 +76,12 @@ namespace CheckinPPP.Helpers
 
         private string HtmlTemplate(Booking booking, string email)
         {
+            var date = DateTime.ParseExact(booking.Date.Date.ToString(), "MM/dd/yyyy HH:mm:ss", CultureInfo.InvariantCulture);
+            var dateString = date.ToString("dd/MM/yyyy");
+
             var template = $"<h3>Booking Confirmation</h3>" +
                 $"<p>Dear {booking.User.Name} {booking.User.Surname}, </p> " +
-                $"<p> Your booking reference is {booking.BookingReference}, your reservation to come to church on the <strong>{booking.Date.Date}</strong> for the time slot <strong>{booking.Time}</strong> has been confirmed.</p>" +
+                $"<p> Your booking reference is {booking.BookingReference}, your reservation to come to church on the <strong>{dateString}</strong> for the time slot <strong>{booking.Time}</strong> has been confirmed.</p>" +
                 $"<p> To cancel this booking, please click on the button below. " +
                 $"</p>" +
                 $"<a href=\"{ new Uri($"{_mailSettings.ReturnUri}?bookingId={booking.Id}&email={email}&name={booking.User.Name}&surname={booking.User.Surname}")}\"> Cancel </a>" +

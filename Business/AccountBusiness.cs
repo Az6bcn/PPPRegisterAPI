@@ -66,7 +66,7 @@ namespace CheckinPPP.Business
 
             if (user is null)
             {
-                return IdentityResult.Failed(new IdentityError { Description = "Please register and confirm your email before log in." });
+                return IdentityResult.Failed(new IdentityError { Description = "Invalid user, register and then login." });
             }
 
             var result = await SignInUser(user, loginModel);
