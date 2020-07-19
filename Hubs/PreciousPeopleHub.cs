@@ -34,7 +34,7 @@ namespace CheckinPPP.Hubs
                 .ToListAsync();
 
             var availableBookings = bookings
-                .Where(x => x.MemberId == null)
+                .Where(x => x.User == null)
                 .ToList();
 
             var bookingsUpdate = new BookingsUpdateSignalR

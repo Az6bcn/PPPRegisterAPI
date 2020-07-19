@@ -5,8 +5,11 @@ using System.Threading.Tasks;
 using CheckinPPP.Data;
 using CheckinPPP.Data.Entities;
 using CheckinPPP.DTOs;
+using CheckinPPP.Hubs;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 
 namespace CheckinPPP.Controllers
 {
@@ -15,10 +18,15 @@ namespace CheckinPPP.Controllers
     public class CheckedInmembersController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private IHubContext<PreciousPeopleHub, IPreciousPeopleClient> _hubContext { get; }
 
-        public CheckedInmembersController(ApplicationDbContext context)
+        public CheckedInmembersController(
+            ApplicationDbContext context,
+            IHubContext<PreciousPeopleHub,
+            IPreciousPeopleClient> hubContext)
         {
             _context = context;
+            _hubContext = hubContext;
         }
 
 
@@ -26,10 +34,10 @@ namespace CheckinPPP.Controllers
         public async Task<IActionResult> GetAllRecords()
         {
             var result = await _context.Set<Booking>()
-                .Include(x => x.Member)
-                .Where(x => x.MemberId != null
+                .Include(x => x.User)
+                .Where(x => x.UserId != null
                     && x.SignIn != null)
-                .OrderBy(x => x.Member.Surname)
+                .OrderBy(x => x.User.Surname)
                 .ToListAsync();
 
             var mappedResult = ParseToCheckedInMemeberDTO(result);
@@ -44,11 +52,11 @@ namespace CheckinPPP.Controllers
             if (serviceId == 0 || !isValidServiceId(serviceId)) { return BadRequest(); }
 
             var result = await _context.Set<Booking>()
-                .Include(x => x.Member)
+                .Include(x => x.User)
                 .Where(x => x.Date.Date == date.Date
-                    && x.MemberId != null
+                    && x.UserId != null
                     && x.ServiceId == serviceId)
-                .OrderBy(x => x.Member.Surname)
+                .OrderBy(x => x.User.Surname)
                 .ToListAsync();
 
             var mappedResult = ParseToCheckedInMemeberDTO(result);
@@ -62,12 +70,12 @@ namespace CheckinPPP.Controllers
             if (serviceId == 0 || !isValidServiceId(serviceId)) { return BadRequest(); }
 
             var result = await _context.Set<Booking>()
-                 .Include(x => x.Member)
+                 .Include(x => x.User)
                 .Where(x => x.Date.Date >= dateFrom.Date
                     && x.Date.Date <= dateTo.Date
-                    && x.MemberId != null
+                    && x.UserId != null
                      && x.ServiceId == serviceId)
-                .OrderBy(x => x.Member.Surname)
+                .OrderBy(x => x.User.Surname)
                 .ToListAsync();
 
             var mappedResult = ParseToCheckedInMemeberDTO(result);
@@ -79,11 +87,11 @@ namespace CheckinPPP.Controllers
         public async Task<IActionResult> GetAllPickUpRecordsOnSpecifiedDate(DateTime date)
         {
             var result = await _context.Set<Booking>()
-                .Include(x => x.Member)
+                .Include(x => x.User)
                 .Where(x => x.Date.Date == date.Date
-                    && x.MemberId != null
+                    && x.UserId != null
                     && x.PickUp)
-                .OrderBy(x => x.Member.Surname)
+                .OrderBy(x => x.User.Surname)
                 .ToListAsync();
 
             var mappedResult = ParseToCheckedInMemeberDTO(result);
@@ -110,6 +118,20 @@ namespace CheckinPPP.Controllers
             _context.Update(result);
 
             await _context.SaveChangesAsync();
+
+
+
+            var bookings = await _context.Set<Booking>()
+                .Include(x => x.User)
+                .Where(x => x.Date.Date == data.date.Date
+                    && x.UserId != null
+                    && x.ServiceId == data.ServiceId)
+                .OrderBy(x => x.User.Surname)
+                .ToListAsync();
+
+            var mappedResult = ParseToCheckedInMemeberDTO(bookings);
+
+            await _hubContext.Clients.All.ReceivedBookingsToSignInUpdateAsync(mappedResult);
 
             return Ok(MapToSignInOutResponseDTO(result, true));
         }
@@ -145,6 +167,45 @@ namespace CheckinPPP.Controllers
             return Ok(services);
         }
 
+        [HttpGet("attendance/{selectedDate}")]
+        public async Task<IActionResult> GetAttendanceAsync(DateTime selectedDate)
+        {
+            var date = selectedDate;
+
+            //var date = DateTime.Parse("2020-07-05 00:00:00.0000000");
+
+            var result = await _context.Set<Booking>()
+                .Where(x => x.Date == date.Date)
+                .ToListAsync();
+
+            var groupedResult = result.GroupBy(x => x.ServiceId)
+                .Select(x => new
+                {
+                    ServiceId = x.Key,
+                    Total = x.Select(y => y.ServiceId == x.Key).Count(),
+                    Attended = x.Where(y => y.ServiceId == x.Key
+                        && y.SignIn != null).Count()
+
+                })
+                .ToList();
+
+            var total = new
+            {
+                TotalSlots = result.Count(),
+                TotalSlotsBooked = result.Where(x => x.BookingReference != null).Count(),
+                TotalAttended = result.Where(x => x.SignIn != null).Count()
+            };
+
+            var response = new
+            {
+                groupedResult = groupedResult,
+                total = total
+            };
+
+            return Ok(response);
+
+        }
+
         private List<CheckedInMemberDTO> ParseToCheckedInMemeberDTO(List<Booking> bookings)
         {
             var checkedInMembers = new List<CheckedInMemberDTO>();
@@ -155,16 +216,16 @@ namespace CheckinPPP.Controllers
                     new CheckedInMemberDTO
                     {
                         Id = booking.Id,
-                        Name = booking.Member.Name,
-                        Surname = booking.Member.Surname,
-                        Mobile = booking.Member.Mobile,
+                        Name = booking.User.Name,
+                        Surname = booking.User.Surname,
+                        Mobile = booking.User.PhoneNumber,
                         ServiceId = booking.ServiceId,
                         SignedIn = booking.SignIn,
                         SignedOut = booking.SignOut,
                         Date = booking.Date,
                         Time = booking.Time,
                         PickUp = booking.PickUp,
-                        Gender = booking.Member.Gender
+                        Gender = booking.User.Gender
                     });
             }
             return checkedInMembers;

@@ -16,6 +16,11 @@ using CheckinPPP.Data.Queries;
 using CheckinPPP.Models;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
+using Microsoft.Extensions.Options;
 
 namespace CheckinPPP
 {
@@ -31,9 +36,29 @@ namespace CheckinPPP
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
+            var key = Encoding.ASCII.GetBytes(Configuration.GetSection("Jwt:Key").Value);
+
+
             services.AddDbContext<ApplicationDbContext>(options =>
             {
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+            });
+
+            services.AddIdentity<ApplicationUser, IdentityRole>()
+                .AddEntityFrameworkStores<ApplicationDbContext>()
+                .AddDefaultTokenProviders();
+
+            services.Configure<IdentityOptions>(options =>
+            {
+                options.Password.RequireDigit = true;
+                options.Password.RequireLowercase = true;
+                options.Password.RequireNonAlphanumeric = true;
+                options.Password.RequireUppercase = true;
+                options.Password.RequiredLength = 8;
+                options.Password.RequiredUniqueChars = 1;
+
+                options.User.RequireUniqueEmail = false;
+
             });
 
             var clientUrl = Configuration.GetSection("ClientUrl").Value;
@@ -49,6 +74,27 @@ namespace CheckinPPP
                });
             });
 
+            services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+                .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateAudience = true,
+                        ValidAudience = Configuration.GetSection("Jwt:Audience").Value,
+                        ValidateIssuer = true,
+                        ValidIssuer = Configuration.GetSection("Jwt:Issuer").Value,
+                        ValidateIssuerSigningKey = true,
+                        IssuerSigningKey = new SymmetricSecurityKey(key),
+                        ValidateLifetime = true,
+                        RequireExpirationTime = true
+                    };
+                });
+
+            //services.AddAuthorization();
 
             // Automatically perform database migration (Azure)
             //services.BuildServiceProvider().GetService<ApplicationDbContext>().Database.Migrate();
@@ -61,11 +107,14 @@ namespace CheckinPPP
             services.Configure<MailGunApiEmailSettings>(Configuration.GetSection("MailGunApiEmailSettings"));
 
             services.Configure<MailSettings>(Configuration.GetSection("MailSettings"));
+            services.Configure<JwtOptions>(Configuration.GetSection("Jwt"));
 
             services.AddTransient<IBookingBusiness, BookingBusiness>();
             services.AddTransient<IBookingQueries, BookingQueries>();
             services.AddTransient<ISendEmails, SendEmails>();
             services.AddTransient<IGoogleMailService, GoogleMailService>();
+            services.AddTransient<IAccountBusiness, AccountBusiness>();
+            services.AddTransient<IJwtFactory, JwtFactory>();
 
             services.AddSignalR(hubOptions =>
             {
@@ -95,13 +144,10 @@ namespace CheckinPPP
             {
                 app.UseDeveloperExceptionPage();
             }
-
             app.UseHttpsRedirection();
-
             app.UseRouting();
-
             app.UseCors("myPolicy");
-
+            app.UseAuthentication();
             app.UseAuthorization();
 
             // set default homepage to index.html of the compiled Angular app
@@ -112,7 +158,7 @@ namespace CheckinPPP
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapFallbackToController("index", "Fallback");
+                //endpoints.MapFallbackToController("index", "Fallback");
                 endpoints.MapHub<PreciousPeopleHub>("/ppphub");
                 endpoints.MapControllers();
             });

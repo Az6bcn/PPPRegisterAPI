@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CheckinPPP.Business;
+using CheckinPPP.Data;
 using CheckinPPP.Data.Entities;
 using CheckinPPP.Data.Queries;
 using CheckinPPP.DTOs;
 using CheckinPPP.Helpers;
 using CheckinPPP.Hubs;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.EntityFrameworkCore;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -23,7 +26,7 @@ namespace CheckinPPP.Controllers
         private readonly IBookingQueries _bookingQueries;
         private readonly ISendEmails _sendEmails;
         private readonly IGoogleMailService _googleMailService;
-
+        private readonly ApplicationDbContext _context;
         private IHubContext<PreciousPeopleHub, IPreciousPeopleClient> _hubContext { get; }
 
         public BookingController(
@@ -32,7 +35,8 @@ namespace CheckinPPP.Controllers
             IPreciousPeopleClient> hubContext,
             IBookingQueries bookingQueries,
             ISendEmails sendEmails,
-            IGoogleMailService googleMailService
+            IGoogleMailService googleMailService,
+            ApplicationDbContext context
             )
         {
             _bookingBusiness = bookingBusiness;
@@ -40,9 +44,11 @@ namespace CheckinPPP.Controllers
             _bookingQueries = bookingQueries;
             _sendEmails = sendEmails;
             _googleMailService = googleMailService;
+            _context = context;
         }
 
         [HttpGet("{serviceId}/{date}/{time}")]
+        [Authorize]
         public async Task<IActionResult> GetAvailableBookings(int serviceId, DateTime date, string time)
         {
             var availableBookings = await _bookingQueries.GetAvailableBookingsAsync(serviceId, date, time);
@@ -57,7 +63,7 @@ namespace CheckinPPP.Controllers
         {
             var booking = await _bookingQueries.FindBookingByIdAsync(bookingId);
 
-            if (booking.MemberId is null)
+            if (booking.UserId is null)
             {
                 return Ok(new { cancellable = false });
             }
@@ -68,6 +74,7 @@ namespace CheckinPPP.Controllers
         }
 
         [HttpGet("{date}")]
+        [Authorize]
         public async Task<IActionResult> GetAvailableBookings(DateTime date)
         {
             var availableBookings = await _bookingQueries.GetAvailableBookingsAsync(date);
@@ -88,6 +95,7 @@ namespace CheckinPPP.Controllers
         }
 
         [HttpPost]
+        [Authorize]
         public async Task<IActionResult> BookAppointment([FromBody] BookingDTO booking)
         {
             if (booking is null) { return BadRequest(); }
@@ -95,48 +103,94 @@ namespace CheckinPPP.Controllers
             // group booking : check we have enough slot left for the total number of bookings
             if (booking.IsGroupBooking)
             {
-                var groupBookingResponse = await _bookingBusiness.GroupBookingAsync(booking);
+                var groupBooking = new List<Booking>();
 
-                if (!groupBookingResponse.Any())
+                using var groupBookingTransaction = await _context.Database.BeginTransactionAsync();
+                try
                 {
-                    return BadRequest();
-                }
+                    groupBooking = await _bookingBusiness.GroupBookingAsync(booking);
 
-                if (groupBookingResponse.Any())
-                {
-                    var bookingsUpdate = await _bookingBusiness.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
+                    if (groupBooking == null)
+                    {
+                        return BadRequest("Insufficient slots available to book this group booking");
+                    }
+
+                    _context.UpdateRange(groupBooking);
+
+                    var numbersUpdated = await _context.SaveChangesAsync();
+                    await groupBookingTransaction.CommitAsync();
+
+                    //if (numbersUpdated == (booking.Members.Count * 2))
+                    //{
+                    //    await groupBookingTransaction.CommitAsync();
+
+                    //}
+                    //else
+                    //{
+                    //    await groupBookingTransaction.RollbackAsync();
+                    //}
+
+                    var bookingsUpdate = await _bookingQueries.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
                     await _hubContext.Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate);
+
+
+                    // all have same email, just mesaage anyone of them
+                    var personToEmail = groupBooking.First();
+
+                    await _googleMailService.SendBookingConfirmationEmailAsync(personToEmail.User.Email, personToEmail);
+                }
+                catch
+                {
+                    await groupBookingTransaction.RollbackAsync();
                 }
 
-
-                // all have same email, just mesaage anyone of them
-                var personToEmail = groupBookingResponse.First();
-
-                //_sendEmails.SendBookingConfirmationTemplate(personToEmail.Member.EmailAddress, personToEmail);
-                await _googleMailService.SendBookingConfirmationEmailAsync(personToEmail.Member.EmailAddress, personToEmail);
-
-                return Ok(_bookingBusiness.MapToBookingDTOs(groupBookingResponse));
+                return Ok(_bookingBusiness.MapToBookingDTOs(groupBooking));
             }
 
             // single booking: check select booking still available or any available
-            var singleBookingResponse = await _bookingBusiness.SingleBookingAsync(booking);
+            // try and book
 
-            if (singleBookingResponse is null)
+            Booking singleBooking = null;
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
             {
-                return BadRequest();
-            }
+                singleBooking = await _bookingBusiness.SingleBookingAsync(booking);
 
-            if (singleBookingResponse != null)
-            {
-                var bookingsUpdate2 = await _bookingBusiness.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
+                if (singleBooking is null)
+                {
+                    return BadRequest("Could not find user");
+                }
+
+                _context.UpdateRange(singleBooking);
+
+                var numbersUpdated = await _context.SaveChangesAsync();
+
+                if (!string.IsNullOrWhiteSpace(booking.Member.Id) && numbersUpdated == 1)
+                {
+                    await transaction.CommitAsync();
+                }
+                else if (string.IsNullOrWhiteSpace(booking.Member.Id) && numbersUpdated == 2)
+                {
+                    await transaction.CommitAsync();
+                }
+                else
+                {
+                    await transaction.RollbackAsync();
+                    return BadRequest();
+                }
+
+                var bookingsUpdate2 = await _bookingQueries.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
                 await _hubContext.Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate2);
+
+                await _googleMailService.SendBookingConfirmationEmailAsync(singleBooking.User.Email, singleBooking);
+            }
+            catch (Exception ex)
+            {
+                // no hace nada, piensalo bien
+                await transaction.RollbackAsync();
             }
 
-
-            //_sendEmails.SendBookingConfirmationTemplate(singleBookingResponse.Member.EmailAddress, singleBookingResponse);
-            await _googleMailService.SendBookingConfirmationEmailAsync(singleBookingResponse.Member.EmailAddress, singleBookingResponse);
-
-            return Ok(_bookingBusiness.MapToBookingDTO(singleBookingResponse));
+            return Ok(_bookingBusiness.MapToBookingDTO(singleBooking));
         }
 
 
@@ -164,7 +218,7 @@ namespace CheckinPPP.Controllers
 
                 foreach (var _booking in groupBookings)
                 {
-                    _booking.MemberId = null;
+                    _booking.UserId = null;
                     _booking.BookingReference = null;
                     _booking.GroupLinkId = null;
                 }
@@ -174,12 +228,12 @@ namespace CheckinPPP.Controllers
             }
             else
             {
-                booking.MemberId = null;
+                booking.UserId = null;
                 await CancelInsertions(booking);
                 await _bookingQueries.CancelBookingAsync(booking);
             }
 
-            var bookingsUpdate2 = await _bookingBusiness.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
+            var bookingsUpdate2 = await _bookingQueries.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
             await _hubContext.Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate2);
 
             return Ok();
@@ -192,7 +246,7 @@ namespace CheckinPPP.Controllers
                 // insert into cancel table
                 var _cancelledBooking = CancelledBookings(bookings);
 
-                await _bookingBusiness.CancelBookingsInsertionAsync(_cancelledBooking);
+                await CancelBookingsInsertionAsync(_cancelledBooking);
 
                 return;
             }
@@ -200,7 +254,7 @@ namespace CheckinPPP.Controllers
             // insert into cancel table
             var cancelledBooking = CancelledBooking(booking);
 
-            await _bookingBusiness.CancelBookingInsertionAsync(cancelledBooking);
+            await CancelBookingInsertionAsync(cancelledBooking);
         }
 
         private CancelledBooking CancelledBooking(Booking booking)
@@ -208,7 +262,7 @@ namespace CheckinPPP.Controllers
             var cancelledBooking = new CancelledBooking
             {
                 BookingId = booking.Id,
-                Member = booking.Member,
+                User = booking.User,
                 CancelledAt = DateTime.Now
             };
 
@@ -225,12 +279,28 @@ namespace CheckinPPP.Controllers
                 new CancelledBooking
                 {
                     BookingId = booking.Id,
-                    Member = booking.Member,
+                    User = booking.User,
                     CancelledAt = DateTime.Now
                 });
             }
 
             return cancelledBookings;
         }
+
+
+        private async Task CancelBookingInsertionAsync(CancelledBooking cancelledBooking)
+        {
+            _context.Add<CancelledBooking>(cancelledBooking);
+
+            await _context.SaveChangesAsync();
+        }
+
+        private async Task CancelBookingsInsertionAsync(IEnumerable<CancelledBooking> cancelledBookings)
+        {
+            await _context.AddRangeAsync(cancelledBookings);
+
+            await _context.SaveChangesAsync();
+        }
+
     }
 }
