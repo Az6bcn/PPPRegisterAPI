@@ -110,7 +110,7 @@ namespace CheckinPPP.Business
             return dto;
         }
 
-        public BookingDTO MapToBookingDTO(Booking booking)
+        public BookingDTO MapToBookingDTO(Booking booking, int? totalBooking)
         {
 
             var dto = new BookingDTO
@@ -119,6 +119,7 @@ namespace CheckinPPP.Business
                 ServiceId = booking.ServiceId,
                 Date = booking.Date,
                 Time = booking.Time,
+                TotalNumberBookings = (int)totalBooking
             };
 
             return dto;

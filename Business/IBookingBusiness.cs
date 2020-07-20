@@ -12,6 +12,6 @@ namespace CheckinPPP.Business
         Task<List<Booking>> GroupBookingAsync(BookingDTO booking);
         IEnumerable<BookingDTO> MapToBookingDTOs(IEnumerable<Booking> bookings);
         Task<bool> IsValidBookingAsync(int bookingId, string email, string name, string surname);
-        BookingDTO MapToBookingDTO(Booking booking);
+        BookingDTO MapToBookingDTO(Booking booking, int? totalBooking);
     }
 }

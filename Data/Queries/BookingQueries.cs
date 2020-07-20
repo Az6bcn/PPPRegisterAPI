@@ -143,6 +143,17 @@ namespace CheckinPPP.Data.Queries
             return response;
         }
 
+        public async Task<IEnumerable<Booking>> FindBookingByUserAndDateAsync(string userId, DateTime date)
+        {
+            var response = await _context.Set<Booking>()
+                .Include(x => x.User)
+                .Where(x => x.UserId == userId
+                    && x.Date == date.Date)
+                .ToListAsync();
+
+            return response;
+        }
+
         public async Task<IEnumerable<Booking>> FindBookingsByGoupLinkIdAsync(Guid bookingId)
         {
             var response = await _context.Set<Booking>()

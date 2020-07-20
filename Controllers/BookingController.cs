@@ -68,9 +68,25 @@ namespace CheckinPPP.Controllers
                 return Ok(new { cancellable = false });
             }
 
-            var availableBookingsDTO = _bookingBusiness.MapToBookingDTO(booking);
+            var availableBookingsDTO = _bookingBusiness.MapToBookingDTO(booking, totalBooking: 1);
 
             return Ok(new { cancellable = true, data = availableBookingsDTO });
+        }
+
+        [HttpGet("user/{userId}/{date}")]
+        [Authorize]
+        public async Task<IActionResult> GetAvailableBookings(string userId, DateTime date)
+        {
+            var booking = await _bookingQueries.FindBookingByUserAndDateAsync(userId, date);
+
+            if (!booking.Any())
+            {
+                return Ok(new { hasBooking = true, data = new BookingDTO() });
+            }
+
+            var availableBookingsDTO = _bookingBusiness.MapToBookingDTO(booking.First(), totalBooking: booking.Count());
+
+            return Ok(new { hasBooking = true, data = availableBookingsDTO });
         }
 
         [HttpGet("{date}")]
@@ -190,7 +206,7 @@ namespace CheckinPPP.Controllers
                 await transaction.RollbackAsync();
             }
 
-            return Ok(_bookingBusiness.MapToBookingDTO(singleBooking));
+            return Ok(_bookingBusiness.MapToBookingDTO(singleBooking, totalBooking: 1));
         }
 
 
