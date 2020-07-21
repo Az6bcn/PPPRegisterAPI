@@ -145,9 +145,17 @@ namespace CheckinPPP.Data.Queries
 
         public async Task<IEnumerable<Booking>> FindBookingByUserAndDateAsync(string userId, DateTime date)
         {
+            var user = _context.Set<ApplicationUser>()
+                .Where(x => x.Id == userId).FirstOrDefault();
+
+            if (user is null)
+            {
+                new List<Booking>();
+            }
+
             var response = await _context.Set<Booking>()
                 .Include(x => x.User)
-                .Where(x => x.UserId == userId
+                .Where(x => x.User.Email == user.Email
                     && x.Date == date.Date)
                 .ToListAsync();
 

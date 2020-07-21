@@ -81,10 +81,26 @@ namespace CheckinPPP.Controllers
 
             if (!booking.Any())
             {
-                return Ok(new { hasBooking = true, data = new BookingDTO() });
+                return Ok(new { hasBooking = false, data = new BookingDTO() });
             }
 
-            var availableBookingsDTO = _bookingBusiness.MapToBookingDTO(booking.First(), totalBooking: booking.Count());
+            var availableBookingsDTO = _bookingBusiness.MapToBookingDTOs(booking)
+                .GroupBy(x => x.ServiceId)
+                .Select(x => new
+                {
+                    serviceId = x.Key,
+                    date = x.Where(y => y.ServiceId == x.Key).FirstOrDefault().Date,
+                    time = x.Where(y => y.ServiceId == x.Key).FirstOrDefault().Time,
+                    users = string.Join(',', x.Where(y => y.ServiceId == x.Key)
+                        .Select(z => z.UsersInActiveBooking)
+                        .ToList()),
+                    total = x.Count()
+                }); ;
+
+            if (!availableBookingsDTO.Any())
+            {
+                return Ok(new { hasBooking = false, data = new BookingDTO() });
+            }
 
             return Ok(new { hasBooking = true, data = availableBookingsDTO });
         }

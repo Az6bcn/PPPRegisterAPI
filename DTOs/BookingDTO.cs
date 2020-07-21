@@ -17,5 +17,6 @@ namespace CheckinPPP.DTOs
         public List<MemberDTO> Members { get; set; }
         public string Mobile { get; set; }
         public string EmailAddress { get; set; }
+        public string UsersInActiveBooking { get; set; }
     }
 }

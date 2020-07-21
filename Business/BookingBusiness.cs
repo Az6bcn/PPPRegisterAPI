@@ -102,7 +102,12 @@ namespace CheckinPPP.Business
                         Id = booking.Id,
                         ServiceId = booking.ServiceId,
                         Date = booking.Date,
-                        Time = booking.Time
+                        Time = booking.Time,
+                        TotalNumberBookings = bookings
+                            .Where(x => x.ServiceId == booking.ServiceId)
+                            .ToList()
+                            .Count(),
+                        UsersInActiveBooking = $"{booking.User.Name} {booking.User.Surname}"
                     }
                 );
             }
