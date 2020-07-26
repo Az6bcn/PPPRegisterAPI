@@ -6,7 +6,7 @@ namespace CheckinPPP.Helpers
 {
     public class SeedHelper
     {
-        public static int Max => 65;
+        public static int Max => 80;
 
         public static List<DateTime> GetDateTimes()
         {

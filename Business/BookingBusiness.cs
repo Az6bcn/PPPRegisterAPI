@@ -70,11 +70,14 @@ namespace CheckinPPP.Business
 
             if (assignedMembers.Any())
             {
+                var mainUser = assignedMembers.FirstOrDefault(x => x.PasswordHash != null);
+
                 /// check if all the passed in members are in it
-                var res = GetAllMemebersInExistingGroupEmail(assignedMembers, MapToApplicationUsers(booking).ToList());
+                var res = GetAllMemebersInExistingGroupEmail(assignedMembers, MapToApplicationUsers(booking, mainUser).ToList());
 
                 //if (res.exists.Any()) { users.AddRange(res.exists); }
                 //if (res.notExists.Any()) { users.AddRange(res.notExists); }
+
 
                 AssignExistingAndNonExistingUsersToBookings(response.ToList(), res.exists.ToList(), booking, res.notExists.ToList());
                 return response.ToList();
@@ -242,7 +245,7 @@ namespace CheckinPPP.Business
             return member;
         }
 
-        private IEnumerable<ApplicationUser> MapToApplicationUsers(BookingDTO bookingDTO)
+        private IEnumerable<ApplicationUser> MapToApplicationUsers(BookingDTO bookingDTO, ApplicationUser mainUser = null)
         {
             var users = new List<ApplicationUser>();
 
@@ -254,7 +257,7 @@ namespace CheckinPPP.Business
                         Name = member.Name,
                         Surname = member.Surname,
                         Gender = member.Gender,
-                        PhoneNumber = bookingDTO.Mobile,
+                        PhoneNumber = mainUser?.PhoneNumber ?? bookingDTO.Mobile,
                         Email = bookingDTO.EmailAddress,
                         UserName = bookingDTO.EmailAddress,
                         CreatedAt = DateTime.Now,

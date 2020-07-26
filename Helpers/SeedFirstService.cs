@@ -17,7 +17,7 @@ namespace CheckinPPP.Helpers
             {
                 for (int i = 0; i <= max - 1; i++)
                 {
-                    if (i <= 39)
+                    if (i <= 49)
                     {
                         data.Add(
                                 new Booking
@@ -31,7 +31,7 @@ namespace CheckinPPP.Helpers
                                 }
                             );
                     }
-                    if (i >= 40 && i <= 54)
+                    if (i >= 50 && i <= 69)
                     {
                         data.Add(
                                 new Booking
@@ -45,7 +45,7 @@ namespace CheckinPPP.Helpers
                                 }
                             );
                     }
-                    if (i >= 55 && i <= 64)
+                    if (i >= 70 && i <= 79)
                     {
                         data.Add(
                                 new Booking
