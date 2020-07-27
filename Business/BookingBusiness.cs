@@ -185,6 +185,11 @@ namespace CheckinPPP.Business
                 added.Add(response[i - 1].Id);
             }
 
+            if (!nonExistingUsers.Any())
+            {
+                return response;
+            }
+
             var leftBookings = response
                 .Where(x => !added.Contains(x.Id))
                 .ToList();
