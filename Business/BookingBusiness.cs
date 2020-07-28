@@ -187,6 +187,7 @@ namespace CheckinPPP.Business
 
             if (!nonExistingUsers.Any())
             {
+                response = response.Where(x => x.UserId != null).ToList();
                 return response;
             }
 
