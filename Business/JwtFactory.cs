@@ -36,7 +36,7 @@ namespace CheckinPPP.Business
                 audience: _jwtOptions.Audience,
                 claims: userClaims,
                 notBefore: DateTime.Now,
-                expires: DateTime.Now.AddMinutes(15),
+                expires: DateTime.Now.AddMinutes(30),
                 signingCredentials: GetSigningCredentials()
                 );
 

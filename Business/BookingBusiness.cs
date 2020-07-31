@@ -75,12 +75,9 @@ namespace CheckinPPP.Business
                 /// check if all the passed in members are in it
                 var res = GetAllMemebersInExistingGroupEmail(assignedMembers, MapToApplicationUsers(booking, mainUser).ToList());
 
-                //if (res.exists.Any()) { users.AddRange(res.exists); }
-                //if (res.notExists.Any()) { users.AddRange(res.notExists); }
+                var bookingToBookSlotsFor = AssignExistingAndNonExistingUsersToBookings(response.ToList(), res.exists.ToList(), booking, res.notExists.ToList());
 
-
-                AssignExistingAndNonExistingUsersToBookings(response.ToList(), res.exists.ToList(), booking, res.notExists.ToList());
-                return response.ToList();
+                return bookingToBookSlotsFor.ToList();
             }
             else
             {
@@ -110,7 +107,7 @@ namespace CheckinPPP.Business
                             .Where(x => x.ServiceId == booking.ServiceId)
                             .ToList()
                             .Count(),
-                        UsersInActiveBooking = $"{booking.User.Name} {booking.User.Surname}"
+                        UsersInActiveBooking = $"{booking?.User?.Name} {booking?.User?.Surname}"
                     }
                 );
             }
