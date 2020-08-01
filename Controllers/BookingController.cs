@@ -130,51 +130,46 @@ namespace CheckinPPP.Controllers
         [Authorize]
         public async Task<IActionResult> BookAppointment([FromBody] BookingDTO booking)
         {
-            if (booking is null) { return BadRequest(); }
+            if (booking is null) { return BadRequest("Invalid booking, refresh the page and try again"); }
 
             // group booking : check we have enough slot left for the total number of bookings
             if (booking.IsGroupBooking)
             {
                 var groupBooking = new List<Booking>();
 
+
+                //try
+                //{
+                groupBooking = await _bookingBusiness.GroupBookingAsync(booking);
+
+                if (groupBooking == null)
+                {
+                    return BadRequest("Insufficient slots available to book this group booking");
+                }
+
                 using var groupBookingTransaction = await _context.Database.BeginTransactionAsync();
                 try
                 {
-                    groupBooking = await _bookingBusiness.GroupBookingAsync(booking);
-
-                    if (groupBooking == null)
-                    {
-                        return BadRequest("Insufficient slots available to book this group booking");
-                    }
-
                     _context.UpdateRange(groupBooking);
 
-                    var numbersUpdated = await _context.SaveChangesAsync();
+                    await _context.SaveChangesAsync();
+
                     await groupBookingTransaction.CommitAsync();
-
-                    //if (numbersUpdated == (booking.Members.Count * 2))
-                    //{
-                    //    await groupBookingTransaction.CommitAsync();
-
-                    //}
-                    //else
-                    //{
-                    //    await groupBookingTransaction.RollbackAsync();
-                    //}
-
-                    var bookingsUpdate = await _bookingQueries.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
-                    await _hubContext.Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate);
-
-
-                    // all have same email, just mesaage anyone of them
-                    var personToEmail = groupBooking.First();
-
-                    await _googleMailService.SendBookingConfirmationEmailAsync(personToEmail.User.Email, personToEmail);
                 }
-                catch
+                catch (Exception ex)
                 {
                     await groupBookingTransaction.RollbackAsync();
+                    return BadRequest("Could not complete your booking, something went wrong");
                 }
+
+                var bookingsUpdate = await _bookingQueries.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
+                await _hubContext.Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate);
+
+
+                // all have same email, just mesaage anyone of them
+                var personToEmail = groupBooking.First();
+
+                await _googleMailService.SendBookingConfirmationEmailAsync(personToEmail.User.Email, personToEmail);
 
                 return Ok(_bookingBusiness.MapToBookingDTOs(groupBooking));
             }
