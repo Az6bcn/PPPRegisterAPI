@@ -229,5 +229,33 @@ namespace CheckinPPP.Business
 
             return users;
         }
+
+        public async Task<ApplicationUser> FindUserAsync(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            return user;
+        }
+
+        public async Task<string> GeneratePasswordResetTokenAsync(ApplicationUser user)
+        {
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            return token;
+        }
+
+        public async Task<bool> ValidatePasswordResetTokenAsync(ApplicationUser user, string token)
+        {
+            var isValid = await _userManager.VerifyUserTokenAsync(user, TokenOptions.DefaultProvider, "ResetPassword", token);
+
+            return isValid;
+        }
+
+        public async Task<IdentityResult> ResetPasswordAsync(string newPassword, string token, ApplicationUser user)
+        {
+            var response = await _userManager.ResetPasswordAsync(user, token, newPassword);
+
+            return response;
+        }
     }
 }

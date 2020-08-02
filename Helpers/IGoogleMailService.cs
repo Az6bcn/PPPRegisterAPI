@@ -9,5 +9,6 @@ namespace CheckinPPP.Helpers
     {
         Task SendBookingConfirmationEmailAsync(string email, Booking booking);
         Task SendEmailAsync(MailRequest mailRequest);
+        Task SendPasswordResetEmailAsync(string email, ApplicationUser user, string token);
     }
 }

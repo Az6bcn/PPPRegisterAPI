@@ -62,6 +62,26 @@ namespace CheckinPPP.Helpers
             await smtp.SendMailAsync(message);
         }
 
+        public async Task SendPasswordResetEmailAsync(string email, ApplicationUser user, string token)
+        {
+            MailMessage message = new MailMessage();
+            SmtpClient smtp = new SmtpClient();
+            message.From = new MailAddress(_mailSettings.Mail, _mailSettings.DisplayName);
+            message.To.Add(new MailAddress(email));
+            message.Subject = $"Password reset";
+
+            message.IsBodyHtml = false;
+            message.IsBodyHtml = true;
+            message.Body = HtmlTemplatePasswordReset(user, token, email);
+            smtp.Port = _mailSettings.Port;
+            smtp.Host = _mailSettings.Host;
+            smtp.EnableSsl = true;
+            smtp.UseDefaultCredentials = false;
+            smtp.Credentials = new NetworkCredential(_mailSettings.Mail, _mailSettings.Password);
+            smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
+            await smtp.SendMailAsync(message);
+        }
+
         private TimeSpan GetTime(Booking booking)
         {
             var time = booking.Time.Split(':');
@@ -85,6 +105,22 @@ namespace CheckinPPP.Helpers
                 $"<p> To cancel this booking, please click on the button below. " +
                 $"</p>" +
                 $"<a href=\"{ new Uri($"{_mailSettings.ReturnUri}?bookingId={booking.Id}&email={email}&name={booking.User.Name}&surname={booking.User.Surname}")}\"> Cancel </a>" +
+                $"</br >" +
+                $"<p> Precious People Parish </p>" +
+                $"<p> 0161 835 9000, 07535 703 955 </p>";
+
+            return template;
+        }
+
+        private string HtmlTemplatePasswordReset(ApplicationUser user, string token, string email)
+        {
+
+            var template = $"<h3>Password Reset</h3>" +
+                $"<p>Dear {user.Name} {user.Surname}, </p> " +
+                $"<p> To reset your password, click the link below </p>" +
+                $"<a href=\"{new Uri($"{_mailSettings.PasswordResetUrl}?token={token}&email={email}")}\"> Reset Password </a>" +
+                $"</br >" +
+                $"<p> If you did not forgot your password you can safely ignore this email.</p>" +
                 $"</br >" +
                 $"<p> Precious People Parish </p>" +
                 $"<p> 0161 835 9000, 07535 703 955 </p>";

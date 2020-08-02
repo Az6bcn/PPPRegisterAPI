@@ -1,15 +1,12 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CheckinPPP.Business;
 using CheckinPPP.DTOs;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using CheckinPPP.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Server.HttpSys;
 using Microsoft.Net.Http.Headers;
-using RestSharp;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -20,10 +17,15 @@ namespace CheckinPPP.Controllers
     public class AccountController : Controller
     {
         private readonly IAccountBusiness accountBusiness;
+        private readonly IGoogleMailService _googleMailService;
 
-        public AccountController(IAccountBusiness accountBusiness)
+        public AccountController(
+            IAccountBusiness accountBusiness,
+            IGoogleMailService googleMailService
+           )
         {
             this.accountBusiness = accountBusiness;
+            _googleMailService = googleMailService;
         }
 
         [HttpPost("register")]
@@ -74,10 +76,63 @@ namespace CheckinPPP.Controllers
         [HttpGet("user/{id}")]
         public async Task<IActionResult> GetUserAndLinkedUsers(Guid id)
         {
-            var token = Request.Headers[HeaderNames.Authorization];
             var response = await accountBusiness.GetUserAndLinkedUsers(id);
 
             return Ok(response);
+        }
+
+        [HttpGet("passwordresettoken/{email}")]
+        public async Task<IActionResult> GeneratePasswordResetToken(string email)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return BadRequest("Can not request password reset for invalid email");
+            }
+
+            var user = await accountBusiness.FindUserAsync(email);
+
+            if (user is null)
+            {
+                return BadRequest("Can not request password reset.");
+            }
+
+            var token = await accountBusiness.GeneratePasswordResetTokenAsync(user);
+
+            // generate url with token
+            //var url = Url.Action("ResetPassword", "Account", new { token = token, email = email }, Request.Scheme);
+
+            // send via email
+            await _googleMailService.SendPasswordResetEmailAsync(email, user, token);
+
+            return Ok();
+        }
+
+        [HttpPost("passwordreset")]
+        public async Task<IActionResult> ResetPassword(string token, string email, string newPassword)
+        {
+            if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(email))
+            {
+                return BadRequest("Can not reset password, invalid token or email");
+            }
+
+            var user = await accountBusiness.FindUserAsync(email);
+
+            if (user is null)
+            {
+                return BadRequest("Can not reset password for invalid user.");
+            }
+
+            // reset password
+            var response = await accountBusiness.ResetPasswordAsync(newPassword, token, user);
+
+            if (!response.Succeeded)
+            {
+                var errors = response.Errors.Select(x => x.Description).ToList();
+
+                return BadRequest(errors);
+            }
+
+            return Ok();
         }
     }
 }
