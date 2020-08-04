@@ -9,5 +9,6 @@ namespace CheckinPPP.Models
         public string Host { get; set; }
         public int Port { get; set; }
         public string ReturnUri { get; set; }
+        public string PasswordResetUrl { get; set; }
     }
 }
