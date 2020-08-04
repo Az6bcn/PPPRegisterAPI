@@ -100,8 +100,6 @@ namespace CheckinPPP.Controllers
             var token = await accountBusiness.GeneratePasswordResetTokenAsync(user);
 
             var encodedToken = HttpUtility.UrlEncode(token);
-            // generate url with token
-            //var url = Url.Action("ResetPassword", "Account", new { token = token, email = email }, Request.Scheme);
 
             // send via email
             await _googleMailService.SendPasswordResetEmailAsync(email, user, encodedToken);
