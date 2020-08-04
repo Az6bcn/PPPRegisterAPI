@@ -108,14 +108,14 @@ namespace CheckinPPP.Controllers
         }
 
         [HttpPost("passwordreset")]
-        public async Task<IActionResult> ResetPassword(string token, string email, string newPassword)
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDTO resetPasswordModel)
         {
-            if (string.IsNullOrWhiteSpace(token) || string.IsNullOrWhiteSpace(email))
+            if (string.IsNullOrWhiteSpace(resetPasswordModel.Token) || string.IsNullOrWhiteSpace(resetPasswordModel.Email))
             {
                 return BadRequest("Can not reset password, invalid token or email");
             }
 
-            var user = await accountBusiness.FindUserAsync(email);
+            var user = await accountBusiness.FindUserAsync(resetPasswordModel.Email);
 
             if (user is null)
             {
@@ -123,7 +123,7 @@ namespace CheckinPPP.Controllers
             }
 
             // reset password
-            var response = await accountBusiness.ResetPasswordAsync(newPassword, token, user);
+            var response = await accountBusiness.ResetPasswordAsync(resetPasswordModel.NewPassword, resetPasswordModel.Token, user);
 
             if (!response.Succeeded)
             {

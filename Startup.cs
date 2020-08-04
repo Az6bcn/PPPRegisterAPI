@@ -158,7 +158,7 @@ namespace CheckinPPP
 
             app.UseEndpoints(endpoints =>
             {
-                endpoints.MapFallbackToController("index", "Fallback");
+                //endpoints.MapFallbackToController("index", "Fallback");
                 endpoints.MapHub<PreciousPeopleHub>("/ppphub");
                 endpoints.MapControllers();
             });
