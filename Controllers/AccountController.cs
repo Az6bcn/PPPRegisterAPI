@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Web;
 using CheckinPPP.Business;
 using CheckinPPP.DTOs;
 using CheckinPPP.Helpers;
@@ -98,11 +99,12 @@ namespace CheckinPPP.Controllers
 
             var token = await accountBusiness.GeneratePasswordResetTokenAsync(user);
 
+            var encodedToken = HttpUtility.UrlEncode(token);
             // generate url with token
             //var url = Url.Action("ResetPassword", "Account", new { token = token, email = email }, Request.Scheme);
 
             // send via email
-            await _googleMailService.SendPasswordResetEmailAsync(email, user, token);
+            await _googleMailService.SendPasswordResetEmailAsync(email, user, encodedToken);
 
             return Ok();
         }
