@@ -120,9 +120,27 @@ namespace CheckinPPP.Controllers
                     AdultsAvailableSlots = x.Where(y => y.IsAdultSlot).Count(),
                     KidsAvailableSlots = x.Where(y => y.IsKidSlot).Count(),
                     ToddlersAvailableSlots = x.Where(y => y.IsToddlerSlot).Count()
-                });
+                }).ToList();
 
-            return Ok(grouped);
+            var first = grouped.FirstOrDefault(x => x.Time == "08:30");
+            var second = grouped.FirstOrDefault(x => x.Time == "10:10");
+            var third = grouped.FirstOrDefault(x => x.Time == "11:50");
+
+            var orderGrouped = new List<SlotDTO>();
+            if (first != null)
+            {
+                orderGrouped.Add(first);
+            }
+            if (second != null)
+            {
+                orderGrouped.Add(second);
+            }
+            if (third != null)
+            {
+                orderGrouped.Add(third);
+            }
+
+            return Ok(orderGrouped);
 
         }
 
