@@ -24,8 +24,8 @@ namespace CheckinPPP.Data.Queries
         public async Task<IEnumerable<Booking>> GetAvailableBookingsAsync(DateTime date)
         {
             var response = await _context.Set<Booking>()
-                .Where(x => x.Date.Date == date.Date
-                    && x.UserId == null)
+                .Where(x => x.Date.Date == date.Date)
+                //&& x.UserId == null)
                 .ToListAsync();
 
             return response;

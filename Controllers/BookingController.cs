@@ -117,9 +117,9 @@ namespace CheckinPPP.Controllers
                 {
                     ServiceId = x.Key,
                     Time = x.Select(y => y.Time).FirstOrDefault(),
-                    AdultsAvailableSlots = x.Where(y => y.IsAdultSlot).Count(),
-                    KidsAvailableSlots = x.Where(y => y.IsKidSlot).Count(),
-                    ToddlersAvailableSlots = x.Where(y => y.IsToddlerSlot).Count()
+                    AdultsAvailableSlots = x.Where(y => y.IsAdultSlot).Count() - x.Where(y => y.IsAdultSlot && y.UserId != null).Count(),
+                    KidsAvailableSlots = x.Where(y => y.IsKidSlot).Count() - x.Where(y => y.IsKidSlot && y.UserId != null).Count(),
+                    ToddlersAvailableSlots = x.Where(y => y.IsToddlerSlot).Count() - x.Where(y => y.IsToddlerSlot && y.UserId != null).Count()
                 }).ToList();
 
             var first = grouped.FirstOrDefault(x => x.Time == "08:30");
