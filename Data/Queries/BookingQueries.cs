@@ -25,13 +25,25 @@ namespace CheckinPPP.Data.Queries
         {
             var response = new List<Booking>();
 
+
             if (isSpecialService) // date is saturday
             {
+
+                var startDate = new DateTime(date.Year, date.Month, date.Day).AddDays(-5);
+                var endDate = new DateTime(date.Year, date.Month, date.Day).AddDays(7);
+
                 response = await _context.Set<Booking>()
-                .Where(x => x.Date.Date >= date.Date.AddDays(-6) && x.Date.Date <= date.Date
-                    && x.IsSpecialService) // between that saturday and the monday before it
-                //&& x.UserId == null)
-                .ToListAsync();
+               .Where(x => x.Date.Date >= startDate.Date && x.Date.Date <= endDate.Date
+                   && x.IsSpecialService) // saturday after the current sunday's saturday (+7) and 5 days ago
+                                          //i.e get special services happening in aprox 2 weeks period, 6 days after current sunday and 12 days before current sunday's saturday
+               .ToListAsync();
+
+                //response = await _context.Set<Booking>()
+                //.Where(x => x.Date.Date >= date.Date.AddDays(-12) && x.Date.Date <= date.Date
+                //    && x.IsSpecialService) // between that saturday and the monday before it
+                ////&& x.UserId == null)
+                //.ToListAsync();
+
             }
 
             else
