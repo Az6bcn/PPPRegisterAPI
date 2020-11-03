@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using CheckinPPP.Business;
 using CheckinPPP.Data;
@@ -85,15 +86,16 @@ namespace CheckinPPP.Controllers
             }
 
             var availableBookingsDTO = _bookingBusiness.MapToBookingDTOs(booking)
-                .GroupBy(x => x.ServiceId)
+                .GroupBy(x => x.Time)
                 .Select(x => new
                 {
-                    serviceId = x.Key,
-                    date = x.Where(y => y.ServiceId == x.Key).FirstOrDefault().Date,
-                    time = x.Where(y => y.ServiceId == x.Key).FirstOrDefault().Time,
-                    users = string.Join(',', x.Where(y => y.ServiceId == x.Key)
+                    serviceId = x.Select(y => y.ServiceId).FirstOrDefault(),
+                    date = x.Where(y => y.Time == x.Key).FirstOrDefault().Date,
+                    time = x.Where(y => y.Time == x.Key).FirstOrDefault().Time,
+                    users = string.Join(',', x.Where(y => y.Time == x.Key)
                         .Select(z => z.UsersInActiveBooking)
                         .ToList()),
+                    specialServiceName = x.Where(y => y.Time == x.Key).FirstOrDefault().SpecialServiceName,
                     total = x.Count()
                 }); ;
 
@@ -119,7 +121,8 @@ namespace CheckinPPP.Controllers
                     Time = x.Select(y => y.Time).FirstOrDefault(),
                     AdultsAvailableSlots = x.Where(y => y.IsAdultSlot).Count() - x.Where(y => y.IsAdultSlot && y.UserId != null).Count(),
                     KidsAvailableSlots = x.Where(y => y.IsKidSlot).Count() - x.Where(y => y.IsKidSlot && y.UserId != null).Count(),
-                    ToddlersAvailableSlots = x.Where(y => y.IsToddlerSlot).Count() - x.Where(y => y.IsToddlerSlot && y.UserId != null).Count()
+                    ToddlersAvailableSlots = x.Where(y => y.IsToddlerSlot).Count() - x.Where(y => y.IsToddlerSlot && y.UserId != null).Count(),
+                    ServiceName = "Sunday Service"
                 }).ToList();
 
             var first = grouped.FirstOrDefault(x => x.Time == "08:30");
@@ -142,6 +145,37 @@ namespace CheckinPPP.Controllers
 
             return Ok(orderGrouped);
 
+        }
+
+        /// <summary>
+        /// Gets special services which are usually on saturdays (sunday date -1 day);
+        /// </summary>
+        /// <param name="date"></param>
+        /// <returns></returns>
+        [HttpGet("specialservice/{date}")]
+        [Authorize]
+        public async Task<IActionResult> GetAvailableSpecialServiceBookings(DateTime date)
+        {
+            var availableBookings = await _bookingQueries.GetAvailableBookingsAsync(date, true);
+            var result = new List<SlotDTO>();
+
+            if (availableBookings.Any())
+            {
+                result = availableBookings
+                .GroupBy(x => x.SpecialServiceName)
+                .Select(x => new SlotDTO
+                {
+                    ServiceId = x.Select(y => y.ServiceId).FirstOrDefault(),
+                    Time = x.Select(y => y.Time).FirstOrDefault(),
+                    AdultsAvailableSlots = x.Where(y => y.IsAdultSlot).Count() - x.Where(y => y.IsAdultSlot && y.UserId != null).Count(),
+                    KidsAvailableSlots = x.Where(y => y.IsKidSlot).Count() - x.Where(y => y.IsKidSlot && y.UserId != null).Count(),
+                    ToddlersAvailableSlots = x.Where(y => y.IsToddlerSlot).Count() - x.Where(y => y.IsToddlerSlot && y.UserId != null).Count(),
+                    ServiceName = x.Select(y => y.SpecialServiceName).FirstOrDefault(),
+                    SpecialServiceDate = x.Select(y => y.Date.Date).FirstOrDefault()
+                }).ToList();
+            }
+
+            return Ok(result);
         }
 
         [HttpPost]

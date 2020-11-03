@@ -10,7 +10,7 @@ namespace CheckinPPP.Data.Queries
 {
     public interface IBookingQueries
     {
-        Task<IEnumerable<Booking>> GetAvailableBookingsAsync(DateTime date);
+        Task<IEnumerable<Booking>> GetAvailableBookingsAsync(DateTime date, bool isSpecialService = false);
         Task<IEnumerable<Booking>> GetAvailableBookingsAsync(int serviceId, DateTime date, string time);
         Task<Booking> GetAvailableSingleBookingsAsync(BookingDTO booking, int category);
         Task<IEnumerable<Booking>> GetAvailableGroupBookingsAsync(BookingDTO booking, List<int> categories);

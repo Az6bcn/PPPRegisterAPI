@@ -21,6 +21,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Microsoft.Extensions.Options;
+using System;
 
 namespace CheckinPPP
 {
@@ -219,6 +220,45 @@ namespace CheckinPPP
 
                             context.SaveChanges();
                             logger.LogInformation("Seeded");
+                        }
+
+                        // seed special service:
+                        var seedSpecialService = Configuration.GetSection("SpecialServices")["SeedSpecialServices"];
+                        var shouldSeedSpecialService = Convert.ToBoolean(seedSpecialService);
+
+                        if (shouldSeedSpecialService)
+                        {
+                            logger.LogInformation("Prepairing to seed special service data .....");
+                            var dataToSeed = SeedSpecialService.SeedSingleSpecialService();
+
+                            if (dataToSeed != null)
+                            {
+                                var alreadyExists = context.Set<Booking>()
+                                .Any(x => x.Date.Date == dataToSeed.Date.Date);
+
+                                if (!alreadyExists)
+                                {
+                                    context.Add(dataToSeed);
+                                    context.SaveChanges();
+                                    logger.LogInformation("Special service data seeded");
+                                }
+                            }
+
+                            var datasToSeed = SeedSpecialService.SeedSpecialServices();
+                            if (datasToSeed.Any())
+                            {
+                                var first = datasToSeed.First();
+
+                                var alreadyExists = context.Set<Booking>()
+                                .Any(x => x.Date.Date == first.Date.Date);
+
+                                if (!alreadyExists)
+                                {
+                                    context.AddRange(datasToSeed);
+                                    context.SaveChanges();
+                                    logger.LogInformation("Special services data seeded");
+                                }
+                            }
                         }
                     }
                     logger.LogInformation("Nothing to Seed");

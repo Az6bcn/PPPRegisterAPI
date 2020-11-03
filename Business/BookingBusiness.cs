@@ -107,7 +107,8 @@ namespace CheckinPPP.Business
                             .Where(x => x.ServiceId == booking.ServiceId)
                             .ToList()
                             .Count(),
-                        UsersInActiveBooking = $"{booking?.User?.Name} {booking?.User?.Surname}"
+                        UsersInActiveBooking = $"{booking?.User?.Name} {booking?.User?.Surname}",
+                        SpecialServiceName = booking.SpecialServiceName
                     }
                 );
             }

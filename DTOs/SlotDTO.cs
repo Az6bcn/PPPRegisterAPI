@@ -8,5 +8,7 @@ namespace CheckinPPP.DTOs
         public int AdultsAvailableSlots { get; set; }
         public int KidsAvailableSlots { get; set; }
         public int ToddlersAvailableSlots { get; set; }
+        public string ServiceName { get; set; }
+        public DateTime SpecialServiceDate { get; set; }
     }
 }

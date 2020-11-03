@@ -5,6 +5,7 @@ namespace CheckinPPP.Models
     {
         FirstService = 1,
         SecondService = 2,
-        WorkersMeeting = 3
+        WorkersMeeting = 3,
+        SpecialService = 4
     }
 }

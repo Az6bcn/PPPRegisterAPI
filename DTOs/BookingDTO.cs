@@ -18,5 +18,6 @@ namespace CheckinPPP.DTOs
         public string Mobile { get; set; }
         public string EmailAddress { get; set; }
         public string UsersInActiveBooking { get; set; }
+        public string SpecialServiceName { get; set; }
     }
 }

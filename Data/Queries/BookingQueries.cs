@@ -21,12 +21,27 @@ namespace CheckinPPP.Data.Queries
             _userManager = userManager;
         }
 
-        public async Task<IEnumerable<Booking>> GetAvailableBookingsAsync(DateTime date)
+        public async Task<IEnumerable<Booking>> GetAvailableBookingsAsync(DateTime date, bool isSpecialService = false)
         {
-            var response = await _context.Set<Booking>()
+            var response = new List<Booking>();
+
+            if (isSpecialService) // date is saturday
+            {
+                response = await _context.Set<Booking>()
+                .Where(x => x.Date.Date >= date.Date.AddDays(-6) && x.Date.Date <= date.Date
+                    && x.IsSpecialService) // between that saturday and the monday before it
+                //&& x.UserId == null)
+                .ToListAsync();
+            }
+
+            else
+            {
+                response = await _context.Set<Booking>()
                 .Where(x => x.Date.Date == date.Date)
                 //&& x.UserId == null)
                 .ToListAsync();
+            }
+
 
             return response;
         }
@@ -156,7 +171,7 @@ namespace CheckinPPP.Data.Queries
             var response = await _context.Set<Booking>()
                 .Include(x => x.User)
                 .Where(x => x.User.Email == user.Email
-                    && x.Date == date.Date)
+                    && (x.Date >= date.Date.AddDays(-6) && x.Date <= date.Date)) // include special service happening on Saturday of that Sunday
                 .ToListAsync();
 
             return response;

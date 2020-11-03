@@ -22,5 +22,7 @@ namespace CheckinPPP.Data.Entities
         public bool IsAdultSlot { get; set; }
         public bool IsKidSlot { get; set; }
         public bool IsToddlerSlot { get; set; }
+        public bool IsSpecialService { get; set; }
+        public string SpecialServiceName { get; set; }
     }
 }
