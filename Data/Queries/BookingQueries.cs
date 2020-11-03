@@ -171,7 +171,7 @@ namespace CheckinPPP.Data.Queries
             var response = await _context.Set<Booking>()
                 .Include(x => x.User)
                 .Where(x => x.User.Email == user.Email
-                    && (x.Date >= date.Date.AddDays(-6) && x.Date <= date.Date)) // include special service happening on Saturday of that Sunday
+                    && (x.Date >= date.Date.AddDays(-6) && x.Date <= date.Date)) // include special service happening in last 6 days prior to the sunday
                 .ToListAsync();
 
             return response;
