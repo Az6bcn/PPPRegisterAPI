@@ -410,3 +410,5 @@ appsettings.json
 Migrations/
 
 wwwroot/
+
+Properties/ServiceDependencies/rccgpppcheckin - Web Deploy/profile.arm.json
