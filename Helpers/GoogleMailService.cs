@@ -5,6 +5,7 @@ using System.Net.Mail;
 using System.Threading.Tasks;
 using CheckinPPP.Data.Entities;
 using CheckinPPP.Models;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace CheckinPPP.Helpers
@@ -12,10 +13,12 @@ namespace CheckinPPP.Helpers
     public class GoogleMailService : IGoogleMailService
     {
         private readonly MailSettings _mailSettings;
+        private readonly ILogger<GoogleMailService> _logger;
 
-        public GoogleMailService(IOptions<MailSettings> mailSettings)
+        public GoogleMailService(IOptions<MailSettings> mailSettings, ILogger<GoogleMailService> logger)
         {
             _mailSettings = mailSettings.Value;
+            _logger = logger;
         }
 
         // https://www.codewithmukesh.com/blog/send-emails-with-aspnet-core/
@@ -59,7 +62,15 @@ namespace CheckinPPP.Helpers
             smtp.UseDefaultCredentials = false;
             smtp.Credentials = new NetworkCredential(_mailSettings.Mail, _mailSettings.Password);
             smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
-            await smtp.SendMailAsync(message);
+
+            try
+            {
+                await smtp.SendMailAsync(message);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(LogEvents.BookingError, "Could not send email to user: {user} for this booking details: {booking}", email, booking);
+            }
         }
 
         public async Task SendPasswordResetEmailAsync(string email, ApplicationUser user, string token)
@@ -79,7 +90,16 @@ namespace CheckinPPP.Helpers
             smtp.UseDefaultCredentials = false;
             smtp.Credentials = new NetworkCredential(_mailSettings.Mail, _mailSettings.Password);
             smtp.DeliveryMethod = SmtpDeliveryMethod.Network;
-            await smtp.SendMailAsync(message);
+
+            try
+            {
+                await smtp.SendMailAsync(message);
+
+            }
+            catch (Exception ex)
+            {
+
+            }
         }
 
         private TimeSpan GetTime(Booking booking)

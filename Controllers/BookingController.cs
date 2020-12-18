@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -28,6 +29,8 @@ namespace CheckinPPP.Controllers
         private readonly ISendEmails _sendEmails;
         private readonly IGoogleMailService _googleMailService;
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<BookingController> _logger;
+
         private IHubContext<PreciousPeopleHub, IPreciousPeopleClient> _hubContext { get; }
 
         public BookingController(
@@ -37,7 +40,8 @@ namespace CheckinPPP.Controllers
             IBookingQueries bookingQueries,
             ISendEmails sendEmails,
             IGoogleMailService googleMailService,
-            ApplicationDbContext context
+            ApplicationDbContext context,
+            ILogger<BookingController> logger
             )
         {
             _bookingBusiness = bookingBusiness;
@@ -46,6 +50,8 @@ namespace CheckinPPP.Controllers
             _sendEmails = sendEmails;
             _googleMailService = googleMailService;
             _context = context;
+            _logger = logger;
+
         }
 
         [HttpGet("{serviceId}/{date}/{time}")]
@@ -172,7 +178,9 @@ namespace CheckinPPP.Controllers
                     ToddlersAvailableSlots = x.Where(y => y.IsToddlerSlot).Count() - x.Where(y => y.IsToddlerSlot && y.UserId != null).Count(),
                     ServiceName = x.Select(y => y.SpecialServiceName).FirstOrDefault(),
                     SpecialServiceDate = x.Select(y => y.Date.Date).FirstOrDefault()
-                }).ToList();
+                })
+                .OrderBy(x => x.SpecialServiceDate)
+                .ToList();
             }
 
             return Ok(result);
@@ -206,11 +214,13 @@ namespace CheckinPPP.Controllers
 
                     await _context.SaveChangesAsync();
 
+                    // Commit transaction if all commands succeed, transaction will auto-rollback
                     await groupBookingTransaction.CommitAsync();
                 }
                 catch (Exception ex)
                 {
-                    await groupBookingTransaction.RollbackAsync();
+                    //await groupBookingTransaction.RollbackAsync();
+                    _logger.LogError(LogEvents.BookingError, "Could not complete group booking for user: {user} with details: {booking}", booking.EmailAddress, booking);
                     return BadRequest("Could not complete your booking, something went wrong");
                 }
 
@@ -265,8 +275,8 @@ namespace CheckinPPP.Controllers
             }
             catch (Exception ex)
             {
-                // no hace nada, piensalo bien
-                await transaction.RollbackAsync();
+                _logger.LogError(LogEvents.BookingError, "Could not complete single booking for user: {user} with details: {booking}", booking.EmailAddress, booking);
+                return BadRequest($"Could not complete your booking, something went wrong");
             }
 
             return Ok(_bookingBusiness.MapToBookingDTO(singleBooking, totalBooking: 1));

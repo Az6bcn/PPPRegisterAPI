@@ -15,6 +15,7 @@
         <Folder Include="Helpers\" />
         <Folder Include="Business\" />
         <Folder Include="Data\Queries\" />
+        <Folder Include="Helpers\2021\" />
     </ItemGroup>
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Core" Version="1.1.0" />
@@ -38,6 +39,7 @@
         <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="3.1.5" />
         <PackageReference Include="Microsoft.Extensions.Identity.Stores" Version="3.1.5" />
         <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="3.1.5" />
+        <PackageReference Include="Microsoft.ApplicationInsights.AspNetCore" Version="2.16.0" />
     </ItemGroup>
     <ItemGroup>
       <Content Remove="Properties\ServiceDependencies\rccgpppcheckin - Web Deploy\profile.arm.json" />

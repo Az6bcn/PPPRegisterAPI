@@ -20,7 +20,6 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using Microsoft.Extensions.Options;
 using System;
 
 namespace CheckinPPP
@@ -101,7 +100,6 @@ namespace CheckinPPP
             //services.BuildServiceProvider().GetService<ApplicationDbContext>().Database.Migrate();
             MigrateDatabase(services);
 
-            SeedServiceDatas(services);
 
             // load email settings so it can be made available via DI
             services.AddOptions<MailGunApiEmailSettings>();
@@ -115,7 +113,11 @@ namespace CheckinPPP
             services.AddTransient<ISendEmails, SendEmails>();
             services.AddTransient<IGoogleMailService, GoogleMailService>();
             services.AddTransient<IAccountBusiness, AccountBusiness>();
+            services.AddTransient<ICalculateSundaysIn2021, CalculateSundaysIn2021>();
+            services.AddTransient<ISeedServices, Seed2021Services>();
             services.AddTransient<IJwtFactory, JwtFactory>();
+
+            SeedServiceDatas(services);
 
             services.AddSignalR(hubOptions =>
             {
@@ -136,6 +138,9 @@ namespace CheckinPPP
                 options.SuppressConsumesConstraintForFormFileParameters = true;
                 options.SuppressModelStateInvalidFilter = true;
             });
+
+            // The following line enables Application Insights telemetry collection.
+            services.AddApplicationInsightsTelemetry();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -203,6 +208,7 @@ namespace CheckinPPP
                     // resolve the dependencies I need
                     var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Startup>>();
+                    var _seedServices = scope.ServiceProvider.GetRequiredService<ISeedServices>();
 
                     if (context.Database.GetService<IRelationalDatabaseCreator>().Exists())
                     {
@@ -242,6 +248,8 @@ namespace CheckinPPP
                                     context.SaveChanges();
                                     logger.LogInformation("Special service data seeded");
                                 }
+
+                                logger.LogInformation("Special service already exist");
                             }
 
                             var datasToSeed = SeedSpecialService.SeedSpecialServices();
@@ -259,6 +267,27 @@ namespace CheckinPPP
                                     logger.LogInformation("Special services data seeded");
                                 }
                             }
+                        }
+
+
+                        // seed 2021 services:
+                        var seed2021Service = Configuration.GetSection("SeedServices")["Seed2021Services"];
+                        var shouldSeed2021Service = Convert.ToBoolean(seed2021Service);
+
+                        if (shouldSeed2021Service)
+                        {
+                            logger.LogInformation("Getting 2021 services...");
+                            var service1 = _seedServices.FirstServiceBookingData();
+                            var service2 = _seedServices.SeedSecondServiceBookingData();
+                            var worker3 = _seedServices.SeedWorkersServiceBookingData();
+
+                            logger.LogInformation("Adding 2021 services to context...");
+                            context.AddRange(service1);
+                            context.AddRange(service2);
+                            context.AddRange(worker3);
+
+                            context.SaveChanges();
+                            logger.LogInformation("Seeded 2021 services");
                         }
                     }
                     logger.LogInformation("Nothing to Seed");

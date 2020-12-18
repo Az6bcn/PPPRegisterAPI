@@ -272,7 +272,8 @@ namespace CheckinPPP.Controllers
             {
                 new ServiceDTO{Id = 1, Name = "Second Service" },
                 new ServiceDTO{Id = 2, Name = "Third Service" },
-                new ServiceDTO{Id = 3, Name = "First Service" }
+                new ServiceDTO{Id = 3, Name = "First Service" },
+                new ServiceDTO{Id = 4, Name = "Special Service" }
             };
 
             return services;

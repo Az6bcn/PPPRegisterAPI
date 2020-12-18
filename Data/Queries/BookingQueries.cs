@@ -183,7 +183,7 @@ namespace CheckinPPP.Data.Queries
             var response = await _context.Set<Booking>()
                 .Include(x => x.User)
                 .Where(x => x.User.Email == user.Email
-                    && (x.Date >= date.Date.AddDays(-6) && x.Date <= date.Date)) // include special service happening in last 6 days prior to the sunday
+                    && x.Date >= date.Date.AddDays(-6) && x.Date <= date.Date.AddDays(7)) // include special service happening in past 6 days prior to the sunday and next 7 days after the sunday
                 .ToListAsync();
 
             return response;

@@ -33,9 +33,9 @@ namespace CheckinPPP.Helpers
         public static IEnumerable<Booking> SeedSpecialServices()
         {
 
-            var max = 80;
+            var max = 240;
 
-            var date = new DateTime(2020, 11, 07);
+            var date = new DateTime(2020, 12, 31);
             var data = new List<Booking>();
 
             for (int i = 0; i < max; i++)
@@ -43,16 +43,15 @@ namespace CheckinPPP.Helpers
                 data.Add(new Booking
                 {
                     ServiceId = (int)ServiceTypesEnum.SpecialService,
-                    Time = "13:00",
+                    Time = "23:00",
                     Date = date,
                     IsAdultSlot = true,
                     IsKidSlot = false,
                     IsToddlerSlot = false,
                     IsSpecialService = true,
-                    SpecialServiceName = "Women's Conference 2020"
+                    SpecialServiceName = "Crossover Night 2020 (11 PM - 12:00 Midnight)"
                 });
             }
-
 
             return data;
         }
