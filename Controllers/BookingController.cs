@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -204,6 +205,7 @@ namespace CheckinPPP.Controllers
 
                 if (groupBooking == null)
                 {
+                    _logger.LogWarning(LogEvents.CancelBooking, "Insufficient slots available to book this group booking. {groupBooking}, {time}", ToJsonString(groupBooking), DateTime.UtcNow);
                     return BadRequest("Insufficient slots available to book this group booking");
                 }
 
@@ -220,7 +222,7 @@ namespace CheckinPPP.Controllers
                 catch (Exception ex)
                 {
                     //await groupBookingTransaction.RollbackAsync();
-                    _logger.LogError(LogEvents.BookingError, "Could not complete group booking for user: {user} with details: {booking}", booking.EmailAddress, booking);
+                    _logger.LogError(LogEvents.BookingError, "Could not complete group booking for user: {user} with details: {booking}", booking.EmailAddress, ToJsonString(booking));
                     return BadRequest("Could not complete your booking, something went wrong");
                 }
 
@@ -244,6 +246,7 @@ namespace CheckinPPP.Controllers
             try
             {
                 singleBooking = await _bookingBusiness.SingleBookingAsync(booking);
+
 
                 if (singleBooking is null)
                 {
@@ -275,11 +278,41 @@ namespace CheckinPPP.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(LogEvents.BookingError, "Could not complete single booking for user: {user} with details: {booking}", booking.EmailAddress, booking);
+                _logger.LogError(LogEvents.BookingError, "Could not complete single booking for user: {user} with details: {booking}", booking.EmailAddress, ToJsonString(booking));
                 return BadRequest($"Could not complete your booking, something went wrong");
             }
 
             return Ok(_bookingBusiness.MapToBookingDTO(singleBooking, totalBooking: 1));
+        }
+
+        [HttpDelete("{bookingId}")]
+        public async Task<IActionResult> CancelBooking(int bookingId)
+        {
+            if (bookingId == 0)
+            {
+                return BadRequest();
+            }
+
+            var booking = await _bookingQueries.FindBookingByIdAsync(bookingId);
+
+            if (booking is null)
+            {
+                return NotFound("Couldn't delete booking");
+            }
+
+            if (booking.GroupLinkId != null)
+            {
+                _logger.LogWarning(LogEvents.CancelBooking, "Cannot cancel group booking. {booking}, {time}", ToJsonString(booking), DateTime.UtcNow);
+                return BadRequest("You cannot delete group booking from here");
+            }
+
+            await HandleCancellation(booking);
+
+            var bookingsUpdate2 = await _bookingQueries.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
+            await _hubContext.Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate2);
+
+            return Ok();
+
         }
 
 
@@ -300,6 +333,18 @@ namespace CheckinPPP.Controllers
 
             var booking = await _bookingQueries.FindBookingByIdAsync(bookingId);
 
+            await HandleCancellation(booking);
+
+
+            var bookingsUpdate2 = await _bookingQueries.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
+            await _hubContext.Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate2);
+
+            return Ok();
+        }
+
+
+        private async Task HandleCancellation(Booking booking)
+        {
             if (booking.GroupLinkId != null)
             {
                 var groupBookings = await _bookingQueries.FindBookingsByGoupLinkIdAsync((Guid)booking.GroupLinkId);
@@ -321,11 +366,6 @@ namespace CheckinPPP.Controllers
                 await CancelInsertions(booking);
                 await _bookingQueries.CancelBookingAsync(booking);
             }
-
-            var bookingsUpdate2 = await _bookingQueries.GetBookingsUpdateAsync(booking.ServiceId, booking.Date, booking.Time);
-            await _hubContext.Clients.All.ReceivedBookingsUpdateAsync(bookingsUpdate2);
-
-            return Ok();
         }
 
         private async Task CancelInsertions(Booking booking = null, IEnumerable<Booking> bookings = null)
@@ -389,6 +429,15 @@ namespace CheckinPPP.Controllers
             await _context.AddRangeAsync(cancelledBookings);
 
             await _context.SaveChangesAsync();
+        }
+
+        private object ToJsonString(object value)
+        {
+            return JsonConvert.SerializeObject(value, Formatting.Indented,
+                        new JsonSerializerSettings()
+                        {
+                            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                        });
         }
 
     }
