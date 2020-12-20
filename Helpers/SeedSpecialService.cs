@@ -33,7 +33,7 @@ namespace CheckinPPP.Helpers
         public static IEnumerable<Booking> SeedSpecialServices()
         {
 
-            var max = 240;
+            var max = 180;
 
             var date = new DateTime(2020, 12, 31);
             var data = new List<Booking>();
@@ -49,7 +49,9 @@ namespace CheckinPPP.Helpers
                     IsKidSlot = false,
                     IsToddlerSlot = false,
                     IsSpecialService = true,
-                    SpecialServiceName = "Crossover Night 2020 (11 PM - 12:00 Midnight)"
+                    SpecialServiceName = "Crossover Night 2020 (11 PM - 12:00 Midnight)",
+                    ShowSpecialService = false,
+                    ShowSpecialServiceSlotDetails = false
                 });
             }
 

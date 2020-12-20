@@ -129,7 +129,7 @@ namespace CheckinPPP.Controllers
                     AdultsAvailableSlots = x.Where(y => y.IsAdultSlot).Count() - x.Where(y => y.IsAdultSlot && y.UserId != null).Count(),
                     KidsAvailableSlots = x.Where(y => y.IsKidSlot).Count() - x.Where(y => y.IsKidSlot && y.UserId != null).Count(),
                     ToddlersAvailableSlots = x.Where(y => y.IsToddlerSlot).Count() - x.Where(y => y.IsToddlerSlot && y.UserId != null).Count(),
-                    ServiceName = "Sunday Service"
+                    ServiceName = "Sunday Service",
                 }).ToList();
 
             var first = grouped.FirstOrDefault(x => x.Time == "08:30");
@@ -178,7 +178,12 @@ namespace CheckinPPP.Controllers
                     KidsAvailableSlots = x.Where(y => y.IsKidSlot).Count() - x.Where(y => y.IsKidSlot && y.UserId != null).Count(),
                     ToddlersAvailableSlots = x.Where(y => y.IsToddlerSlot).Count() - x.Where(y => y.IsToddlerSlot && y.UserId != null).Count(),
                     ServiceName = x.Select(y => y.SpecialServiceName).FirstOrDefault(),
-                    SpecialServiceDate = x.Select(y => y.Date.Date).FirstOrDefault()
+                    SpecialServiceDate = x.Select(y => y.Date.Date).FirstOrDefault(),
+                    ShowSpecialService = x.Select(y => y.ShowSpecialService).FirstOrDefault(),
+                    ShowSpecialServiceSlotDetails = x.Select(y => y.ShowSpecialServiceSlotDetails).FirstOrDefault(),
+                    SpecialAnnouncement = x.Select(y => y.ShowSpecialAnnouncement).FirstOrDefault(),
+                    HasSpecialAnnouncement = string.IsNullOrWhiteSpace(x.Select(y => y.ShowSpecialAnnouncement).FirstOrDefault()) ? false : true,
+                    SpecialServiceYoutubeUrl = x.Select(y => y.SpecialServiceYoutubeUrl).FirstOrDefault()
                 })
                 .OrderBy(x => x.SpecialServiceDate)
                 .ToList();
