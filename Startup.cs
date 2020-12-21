@@ -276,18 +276,32 @@ namespace CheckinPPP
 
                         if (shouldSeed2021Service)
                         {
+                            
+                            logger.LogInformation("Prepairing to seed 2021 service data .....");
+                            
                             logger.LogInformation("Getting 2021 services...");
                             var service1 = _seedServices.FirstServiceBookingData();
                             var service2 = _seedServices.SeedSecondServiceBookingData();
                             var worker3 = _seedServices.SeedWorkersServiceBookingData();
+                            
+                            var first = service1.First();
+                            
+                            var alreadyExists = context.Set<Booking>()
+                                .Any(x => x.Date.Date == first.Date.Date);
 
-                            logger.LogInformation("Adding 2021 services to context...");
-                            context.AddRange(service1);
-                            context.AddRange(service2);
-                            context.AddRange(worker3);
+                            if (!alreadyExists)
+                            {
+                                logger.LogInformation("Adding 2021 services to context...");
+                                
+                                context.AddRange(service1);
+                                context.AddRange(service2);
+                                context.AddRange(worker3);
 
-                            context.SaveChanges();
-                            logger.LogInformation("Seeded 2021 services");
+                                context.SaveChanges();
+                                logger.LogInformation("Seeded 2021 services");
+                            }
+
+                            logger.LogInformation("Special service already exist");
                         }
                     }
                     logger.LogInformation("Nothing to Seed");

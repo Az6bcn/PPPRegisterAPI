@@ -116,24 +116,43 @@ namespace CheckinPPP.Data.Queries
                     && x.Date.Date == booking.Date.Date
                     && x.Time == booking.Time);
 
-            // category 1
-            var res = await response
-                .Where(x => x.IsAdultSlot)
-                .Take(category1Count)
-                .ToListAsync();
+            var res = new List<Booking>();
+            var res2 = new List<Booking>();
+            var res3 = new List<Booking>();
+            
+            // check if date is for special service where all slots is in adult:
+            if (await response.AnyAsync(x => x.IsSpecialService && !x.ShowSpecialServiceSlotDetails))
+            {
+                category1Count = category1Count + category2Count;
+                category1Count = category1Count + category3Count;
+                
+                // category 1
+                res = await response
+                    .Where(x => x.IsAdultSlot)
+                    .Take(category1Count)
+                    .ToListAsync();
+            }
+            else
+            {
+                // category 1
+                res = await response
+                    .Where(x => x.IsAdultSlot)
+                    .Take(category1Count)
+                    .ToListAsync();
 
-            // category 2
-            var res2 = await response
-               .Where(x => x.IsKidSlot)
-               .Take(category2Count)
-               .ToListAsync();
+                // category 2
+                res2 = await response
+                   .Where(x => x.IsKidSlot)
+                   .Take(category2Count)
+                   .ToListAsync();
 
-            // category 3
-            var res3 = await response
-               .Where(x => x.IsToddlerSlot)
-               .Take(category3Count)
-               .ToListAsync();
-
+                // category 3
+                res3 = await response
+                   .Where(x => x.IsToddlerSlot)
+                   .Take(category3Count)
+                   .ToListAsync();
+            }
+            
             bookings.AddRange(res);
             bookings.AddRange(res2);
             bookings.AddRange(res3);

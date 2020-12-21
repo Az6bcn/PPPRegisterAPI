@@ -15,7 +15,6 @@ namespace CheckinPPP.Business
 {
     public class BookingBusiness : IBookingBusiness
     {
-
         private readonly IBookingQueries _bookingQueries;
 
         public BookingBusiness(IBookingQueries bookingQueries)
@@ -25,7 +24,9 @@ namespace CheckinPPP.Business
 
         public async Task<Booking> SingleBookingAsync(BookingDTO booking)
         {
-            var availableBookingSlot = await _bookingQueries.GetAvailableSingleBookingsAsync(booking, booking.Member.CategoryId);
+            var availableBookingSlot =
+                await _bookingQueries.GetAvailableSingleBookingsAsync(booking,
+                    booking.Member.CategoryId);
 
             if (availableBookingSlot is null)
             {
@@ -39,8 +40,13 @@ namespace CheckinPPP.Business
             if (!string.IsNullOrWhiteSpace(booking.Member.Id))
             {
                 // find user
-                var user = await _bookingQueries.FindUserByIdAsync(booking.Member.Id);
-                if (user is null) { return null; }
+                var user =
+                    await _bookingQueries.FindUserByIdAsync(booking.Member.Id);
+                if (user is null)
+                {
+                    return null;
+                }
+
                 availableBookingSlot.UserId = user.Id;
             }
             else
@@ -53,7 +59,7 @@ namespace CheckinPPP.Business
             return availableBookingSlot;
         }
 
-        public async Task<List<Booking>> GroupBookingAsync(BookingDTO booking)
+        public async Task<(List<Booking> booking, bool canBook)> GroupBookingAsync(BookingDTO booking)
         {
             var users = new List<ApplicationUser>();
 
@@ -61,36 +67,51 @@ namespace CheckinPPP.Business
                 .Members
                 .Select(x => x.CategoryId).ToList();
 
-            var response = await _bookingQueries.GetAvailableGroupBookingsAsync(booking, categoriesInGroupBooking);
+            var response =
+                await _bookingQueries.GetAvailableGroupBookingsAsync(booking,
+                    categoriesInGroupBooking);
 
-            if (!response.Any() || response.Count() != booking.Members.Count) { return null; }
+            if (!response.Any() || response.Count() != booking.Members.Count)
+            {
+                return (new List<Booking>(), false);
+            }
 
             // find users assigned to main user's email
-            var assignedMembers = await _bookingQueries.FindUsersAssignedToMainUserInGroupBokingByEmailAsync(booking.EmailAddress);
+            var assignedMembers =
+                await _bookingQueries
+                    .FindUsersAssignedToMainUserInGroupBokingByEmailAsync(
+                        booking.EmailAddress);
 
             if (assignedMembers.Any())
             {
-                var mainUser = assignedMembers.FirstOrDefault(x => x.PasswordHash != null);
+                var mainUser =
+                    assignedMembers.FirstOrDefault(x => x.PasswordHash != null);
 
                 /// check if all the passed in members are in it
-                var res = GetAllMemebersInExistingGroupEmail(assignedMembers, MapToApplicationUsers(booking, mainUser).ToList());
+                var res = GetAllMemebersInExistingGroupEmail(assignedMembers,
+                    MapToApplicationUsers(booking, mainUser).ToList());
 
-                var bookingToBookSlotsFor = AssignExistingAndNonExistingUsersToBookings(response.ToList(), res.exists.ToList(), booking, res.notExists.ToList());
+                var bookingToBookSlotsFor =
+                    AssignExistingAndNonExistingUsersToBookings(
+                        response.ToList(), res.exists.ToList(), booking,
+                        res.notExists.ToList());
 
-                return bookingToBookSlotsFor.ToList();
+                return (bookingToBookSlotsFor.ToList(), true);
             }
             else
             {
                 users.AddRange(MapToApplicationUsers(booking));
             }
 
-            var bookingWithMembersAssigned = AssignUsersToBookings(response, users, booking);
+            var bookingWithMembersAssigned =
+                AssignUsersToBookings(response, users, booking);
 
-            return response.ToList();
+            return (response.ToList(), true);
         }
 
 
-        public IEnumerable<BookingDTO> MapToBookingDTOs(IEnumerable<Booking> bookings)
+        public IEnumerable<BookingDTO> MapToBookingDTOs(
+            IEnumerable<Booking> bookings)
         {
             var dto = new List<BookingDTO>();
 
@@ -107,7 +128,8 @@ namespace CheckinPPP.Business
                             .Where(x => x.ServiceId == booking.ServiceId)
                             .ToList()
                             .Count(),
-                        UsersInActiveBooking = $"{booking?.User?.Name} {booking?.User?.Surname}",
+                        UsersInActiveBooking =
+                            $"{booking?.User?.Name} {booking?.User?.Surname}",
                         SpecialServiceName = booking.SpecialServiceName
                     }
                 );
@@ -118,43 +140,45 @@ namespace CheckinPPP.Business
 
         public BookingDTO MapToBookingDTO(Booking booking, int? totalBooking)
         {
-
             var dto = new BookingDTO
             {
                 Id = booking.Id,
                 ServiceId = booking.ServiceId,
                 Date = booking.Date,
                 Time = booking.Time,
-                TotalNumberBookings = (int)totalBooking
+                TotalNumberBookings = (int) totalBooking
             };
 
             return dto;
         }
 
-        public async Task<bool> IsValidBookingAsync(int bookingId, string email, string name, string surname)
+        public async Task<bool> IsValidBookingAsync(int bookingId, string email,
+            string name, string surname)
         {
-            var isValidBooking = await _bookingQueries.IsValidBookingAsync(bookingId, email, name, surname);
+            var isValidBooking =
+                await _bookingQueries.IsValidBookingAsync(bookingId, email,
+                    name, surname);
 
             return isValidBooking;
         }
 
 
-        private IEnumerable<Booking> AssignUsersToBookings(IEnumerable<Booking> response, List<ApplicationUser> users, BookingDTO booking)
+        private IEnumerable<Booking> AssignUsersToBookings(
+            IEnumerable<Booking> response, List<ApplicationUser> users,
+            BookingDTO booking)
         {
-
             var groupId = Guid.NewGuid();
             var bookingReference = Guid.NewGuid();
 
             var i = 0;
             foreach (var _booking in response)
             {
-
                 _booking.User = users[i];
                 _booking.GroupLinkId = groupId;
                 _booking.BookingReference = bookingReference;
                 _booking.PickUp = booking.Members
                     .Where(x => x.Name == users[i].Name
-                        && x.Surname == users[i].Surname)
+                                && x.Surname == users[i].Surname)
                     .First().PickUp;
 
                 i++;
@@ -163,9 +187,11 @@ namespace CheckinPPP.Business
             return response;
         }
 
-        private IEnumerable<Booking> AssignExistingAndNonExistingUsersToBookings(List<Booking> response, List<ApplicationUser> existingUsers, BookingDTO booking, List<ApplicationUser> nonExistingUsers)
+        private IEnumerable<Booking>
+            AssignExistingAndNonExistingUsersToBookings(List<Booking> response,
+                List<ApplicationUser> existingUsers, BookingDTO booking,
+                List<ApplicationUser> nonExistingUsers)
         {
-
             var added = new List<int>();
             var groupId = Guid.NewGuid();
             var bookingReference = Guid.NewGuid();
@@ -177,7 +203,7 @@ namespace CheckinPPP.Business
                 response[i - 1].BookingReference = bookingReference;
                 response[i - 1].PickUp = booking.Members
                     .Where(x => x.Name == existingUsers[i - 1].Name
-                        && x.Surname == existingUsers[i - 1].Surname)
+                                && x.Surname == existingUsers[i - 1].Surname)
                     .First().PickUp;
 
                 added.Add(response[i - 1].Id);
@@ -202,7 +228,7 @@ namespace CheckinPPP.Business
                 _booking.BookingReference = bookingReference;
                 _booking.PickUp = booking.Members
                     .Where(x => x.Name == nonExistingUsers[j].Name
-                        && x.Surname == nonExistingUsers[j].Surname)
+                                && x.Surname == nonExistingUsers[j].Surname)
                     .First().PickUp;
 
                 j++;
@@ -211,14 +237,18 @@ namespace CheckinPPP.Business
             return response;
         }
 
-        private (IEnumerable<ApplicationUser> exists, IEnumerable<ApplicationUser> notExists) GetAllMemebersInExistingGroupEmail(IEnumerable<ApplicationUser> existingMembers, List<ApplicationUser> requestMembers)
+        private (IEnumerable<ApplicationUser> exists,
+            IEnumerable<ApplicationUser> notExists)
+            GetAllMemebersInExistingGroupEmail(
+                IEnumerable<ApplicationUser> existingMembers,
+                List<ApplicationUser> requestMembers)
         {
             var comparer = new MemberEqualityComparer();
             var notComparer = new DistinctEqualityComparer();
 
             // are all the members in db same as the ones in the request
-            var sameMembers = existingMembers.
-                Where(x => requestMembers.Contains(x, comparer))
+            var sameMembers = existingMembers
+                .Where(x => requestMembers.Contains(x, comparer))
                 .ToList();
 
             // no existing: the ones in requestMember and not in existingmember
@@ -249,7 +279,8 @@ namespace CheckinPPP.Business
             return member;
         }
 
-        private IEnumerable<ApplicationUser> MapToApplicationUsers(BookingDTO bookingDTO, ApplicationUser mainUser = null)
+        private IEnumerable<ApplicationUser> MapToApplicationUsers(
+            BookingDTO bookingDTO, ApplicationUser mainUser = null)
         {
             var users = new List<ApplicationUser>();
 
@@ -261,13 +292,14 @@ namespace CheckinPPP.Business
                         Name = member.Name,
                         Surname = member.Surname,
                         Gender = member.Gender,
-                        PhoneNumber = mainUser?.PhoneNumber ?? bookingDTO.Mobile,
+                        PhoneNumber =
+                            mainUser?.PhoneNumber ?? bookingDTO.Mobile,
                         Email = bookingDTO.EmailAddress,
                         UserName = bookingDTO.EmailAddress,
                         CreatedAt = DateTime.Now,
                         CategoryId = member.CategoryId
                     }
-               );
+                );
             }
 
             return users;
