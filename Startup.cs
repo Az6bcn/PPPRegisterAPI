@@ -21,6 +21,10 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using System;
+using CheckinPPP.Helpers.Extensions;
+using Microsoft.ApplicationInsights.Extensibility;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace CheckinPPP
 {
@@ -39,7 +43,7 @@ namespace CheckinPPP
             var key = Encoding.ASCII.GetBytes(Configuration.GetSection("Jwt:Key").Value);
 
 
-            services.AddDbContext<ApplicationDbContext>(options =>
+            services.AddDbContext<ApplicationDbContext>( options =>
             {
                 options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
             });
@@ -58,7 +62,6 @@ namespace CheckinPPP
                 options.Password.RequiredUniqueChars = 1;
 
                 options.User.RequireUniqueEmail = false;
-
             });
 
             var clientUrl = Configuration.GetSection("ClientUrl").Value;
@@ -66,19 +69,19 @@ namespace CheckinPPP
             services.AddCors(options =>
             {
                 options.AddPolicy("myPolicy", builder =>
-               {
-                   builder.WithOrigins(clientUrl);
-                   builder.AllowAnyMethod();
-                   builder.AllowAnyHeader();
-                   builder.AllowCredentials(); // for signalR
-               });
+                {
+                    builder.WithOrigins(clientUrl);
+                    builder.AllowAnyMethod();
+                    builder.AllowAnyHeader();
+                    builder.AllowCredentials(); // for signalR
+                });
             });
 
             services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
+                {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
                 .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
                 {
                     options.TokenValidationParameters = new TokenValidationParameters
@@ -119,17 +122,7 @@ namespace CheckinPPP
 
             SeedServiceDatas(services);
 
-            services.AddSignalR(hubOptions =>
-            {
-                hubOptions.EnableDetailedErrors = true;
-            });
-
-            services.AddControllers()
-                .AddNewtonsoftJson(options =>
-                {
-                    // all dates must be in ISODate format
-                    options.SerializerSettings.DateFormatString = "yyyy-MM-ddTHH:mm:ssZ";
-                });
+            services.AddSignalR(hubOptions => { hubOptions.EnableDetailedErrors = true; });
 
             services.Configure<ApiBehaviorOptions>(options =>
             {
@@ -141,15 +134,29 @@ namespace CheckinPPP
 
             // The following line enables Application Insights telemetry collection.
             services.AddApplicationInsightsTelemetry();
+            
+            services.AddControllers()
+                .AddNewtonsoftJson(options =>
+                {
+                    // all dates must be in ISODate format
+                    options.SerializerSettings.DateFormatString = "yyyy-MM-ddTHH:mm:ssZ";
+                    options.SerializerSettings.Formatting = Formatting.Indented;
+                    options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
+                    options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, TelemetryConfiguration configuration)
         {
+            
+            
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
+                configuration.DisableTelemetry = true;
             }
+            app.UseRequestLoggerExtension();
             app.UseHttpsRedirection();
             app.UseRouting();
             app.UseCors("myPolicy");
@@ -192,6 +199,7 @@ namespace CheckinPPP
                         context.Database.Migrate();
                         logger.LogInformation("Migrated Database");
                     }
+
                     logger.LogInformation("No Pending Migrations");
                 }
             }
@@ -240,7 +248,7 @@ namespace CheckinPPP
                             if (dataToSeed != null)
                             {
                                 var alreadyExists = context.Set<Booking>()
-                                .Any(x => x.Date.Date == dataToSeed.Date.Date);
+                                    .Any(x => x.Date.Date == dataToSeed.Date.Date);
 
                                 if (!alreadyExists)
                                 {
@@ -258,7 +266,7 @@ namespace CheckinPPP
                                 var first = datasToSeed.First();
 
                                 var alreadyExists = context.Set<Booking>()
-                                .Any(x => x.Date.Date == first.Date.Date);
+                                    .Any(x => x.Date.Date == first.Date.Date);
 
                                 if (!alreadyExists)
                                 {
@@ -276,23 +284,22 @@ namespace CheckinPPP
 
                         if (shouldSeed2021Service)
                         {
-                            
                             logger.LogInformation("Prepairing to seed 2021 service data .....");
-                            
+
                             logger.LogInformation("Getting 2021 services...");
                             var service1 = _seedServices.FirstServiceBookingData();
                             var service2 = _seedServices.SeedSecondServiceBookingData();
                             var worker3 = _seedServices.SeedWorkersServiceBookingData();
-                            
+
                             var first = service1.First();
-                            
+
                             var alreadyExists = context.Set<Booking>()
                                 .Any(x => x.Date.Date == first.Date.Date);
 
                             if (!alreadyExists)
                             {
                                 logger.LogInformation("Adding 2021 services to context...");
-                                
+
                                 context.AddRange(service1);
                                 context.AddRange(service2);
                                 context.AddRange(worker3);
@@ -304,6 +311,7 @@ namespace CheckinPPP
                             logger.LogInformation("Special service already exist");
                         }
                     }
+
                     logger.LogInformation("Nothing to Seed");
                 }
             }
