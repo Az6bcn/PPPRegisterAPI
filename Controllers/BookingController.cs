@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 using CheckinPPP.Business;
 using CheckinPPP.Data;
@@ -13,7 +12,6 @@ using CheckinPPP.Hubs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
@@ -27,12 +25,10 @@ namespace CheckinPPP.Controllers
     {
         private readonly IBookingBusiness _bookingBusiness;
         private readonly IBookingQueries _bookingQueries;
-        private readonly ISendEmails _sendEmails;
-        private readonly IGoogleMailService _googleMailService;
         private readonly ApplicationDbContext _context;
+        private readonly IGoogleMailService _googleMailService;
         private readonly ILogger<BookingController> _logger;
-
-        private IHubContext<PreciousPeopleHub, IPreciousPeopleClient> _hubContext { get; }
+        private readonly ISendEmails _sendEmails;
 
         public BookingController(
             IBookingBusiness bookingBusiness,
@@ -54,6 +50,8 @@ namespace CheckinPPP.Controllers
             _logger = logger;
         }
 
+        private IHubContext<PreciousPeopleHub, IPreciousPeopleClient> _hubContext { get; }
+
         [HttpGet("{serviceId}/{date}/{time}")]
         [Authorize]
         public async Task<IActionResult> GetAvailableBookings(int serviceId, DateTime date, string time)
@@ -70,12 +68,9 @@ namespace CheckinPPP.Controllers
         {
             var booking = await _bookingQueries.FindBookingByIdAsync(bookingId);
 
-            if (booking.UserId is null)
-            {
-                return Ok(new {cancellable = false});
-            }
+            if (booking.UserId is null) return Ok(new {cancellable = false});
 
-            var availableBookingsDTO = _bookingBusiness.MapToBookingDTO(booking, totalBooking: 1);
+            var availableBookingsDTO = _bookingBusiness.MapToBookingDTO(booking, 1);
 
             return Ok(new {cancellable = true, data = availableBookingsDTO});
         }
@@ -86,10 +81,7 @@ namespace CheckinPPP.Controllers
         {
             var booking = await _bookingQueries.FindBookingByUserAndDateAsync(userId, date);
 
-            if (!booking.Any())
-            {
-                return Ok(new {hasBooking = false, data = new BookingDTO()});
-            }
+            if (!booking.Any()) return Ok(new {hasBooking = false, data = new BookingDTO()});
 
             var availableBookingsDTO = _bookingBusiness.MapToBookingDTOs(booking)
                 .GroupBy(x => x.Time)
@@ -106,10 +98,7 @@ namespace CheckinPPP.Controllers
                 });
             ;
 
-            if (!availableBookingsDTO.Any())
-            {
-                return Ok(new {hasBooking = false, data = new BookingDTO()});
-            }
+            if (!availableBookingsDTO.Any()) return Ok(new {hasBooking = false, data = new BookingDTO()});
 
             return Ok(new {hasBooking = true, data = availableBookingsDTO});
         }
@@ -132,7 +121,7 @@ namespace CheckinPPP.Controllers
                                          x.Where(y => y.IsKidSlot && y.UserId != null).Count(),
                     ToddlersAvailableSlots = x.Where(y => y.IsToddlerSlot).Count() -
                                              x.Where(y => y.IsToddlerSlot && y.UserId != null).Count(),
-                    ServiceName = "Sunday Service",
+                    ServiceName = "Sunday Service"
                 }).ToList();
 
             var first = grouped.FirstOrDefault(x => x.Time == "08:30");
@@ -140,26 +129,17 @@ namespace CheckinPPP.Controllers
             var third = grouped.FirstOrDefault(x => x.Time == "11:50");
 
             var orderGrouped = new List<SlotDTO>();
-            if (first != null)
-            {
-                orderGrouped.Add(first);
-            }
+            if (first != null) orderGrouped.Add(first);
 
-            if (second != null)
-            {
-                orderGrouped.Add(second);
-            }
+            if (second != null) orderGrouped.Add(second);
 
-            if (third != null)
-            {
-                orderGrouped.Add(third);
-            }
+            if (third != null) orderGrouped.Add(third);
 
             return Ok(orderGrouped);
         }
 
         /// <summary>
-        /// Gets special services which are usually on saturdays (sunday date -1 day);
+        ///     Gets special services which are usually on saturdays (sunday date -1 day);
         /// </summary>
         /// <param name="date"></param>
         /// <returns></returns>
@@ -171,7 +151,6 @@ namespace CheckinPPP.Controllers
             var result = new List<SlotDTO>();
 
             if (availableBookings.Any())
-            {
                 result = availableBookings
                     .GroupBy(x => x.SpecialServiceName)
                     .Select(x => new SlotDTO
@@ -197,7 +176,6 @@ namespace CheckinPPP.Controllers
                     })
                     .OrderBy(x => x.SpecialServiceDate)
                     .ToList();
-            }
 
             return Ok(result);
         }
@@ -206,10 +184,7 @@ namespace CheckinPPP.Controllers
         [Authorize]
         public async Task<IActionResult> BookAppointment([FromBody] BookingDTO booking)
         {
-            if (booking is null)
-            {
-                return BadRequest("Invalid booking, refresh the page and try again");
-            }
+            if (booking is null) return BadRequest("Invalid booking, refresh the page and try again");
 
             // group booking : check we have enough slot left for the total number of bookings
             if (booking.IsGroupBooking)
@@ -244,7 +219,7 @@ namespace CheckinPPP.Controllers
                 catch (Exception ex)
                 {
                     //await groupBookingTransaction.RollbackAsync();
-                    _logger.LogError(LogEvents.BookingError,
+                    _logger.LogError(LogEvents.BookingError, ex,
                         "Could not complete group booking for user: {user} with details: {booking}",
                         booking.EmailAddress, ToJsonString(booking));
                     return BadRequest("Could not complete your booking, something went wrong");
@@ -273,10 +248,7 @@ namespace CheckinPPP.Controllers
                 singleBooking = await _bookingBusiness.SingleBookingAsync(booking);
 
 
-                if (singleBooking is null)
-                {
-                    return BadRequest("Could not find user");
-                }
+                if (singleBooking is null) return BadRequest("Could not find user");
 
                 _context.UpdateRange(singleBooking);
 
@@ -304,29 +276,23 @@ namespace CheckinPPP.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(LogEvents.BookingError,
+                _logger.LogError(LogEvents.BookingError, ex,
                     "Could not complete single booking for user: {user} with details: {booking}", booking.EmailAddress,
                     ToJsonString(booking));
-                return BadRequest($"Could not complete your booking, something went wrong");
+                return BadRequest("Could not complete your booking, something went wrong");
             }
 
-            return Ok(_bookingBusiness.MapToBookingDTO(singleBooking, totalBooking: 1));
+            return Ok(_bookingBusiness.MapToBookingDTO(singleBooking, 1));
         }
 
         [HttpDelete("{bookingId}")]
         public async Task<IActionResult> CancelBooking(int bookingId)
         {
-            if (bookingId == 0)
-            {
-                return BadRequest();
-            }
+            if (bookingId == 0) return BadRequest();
 
             var booking = await _bookingQueries.FindBookingByIdAsync(bookingId);
 
-            if (booking is null)
-            {
-                return NotFound("Couldn't delete booking");
-            }
+            if (booking is null) return NotFound("Couldn't delete booking");
 
             if (booking.GroupLinkId != null)
             {
@@ -348,17 +314,11 @@ namespace CheckinPPP.Controllers
         [HttpPost("{bookingId}/{email}/{name}/{surname}")]
         public async Task<IActionResult> CancelBooking(int bookingId, string email, string name, string surname)
         {
-            if (bookingId == 0)
-            {
-                return BadRequest();
-            }
+            if (bookingId == 0) return BadRequest();
 
             var isValidBooking = await _bookingBusiness.IsValidBookingAsync(bookingId, email, name, surname);
 
-            if (!isValidBooking)
-            {
-                return BadRequest();
-            }
+            if (!isValidBooking) return BadRequest();
 
             var booking = await _bookingQueries.FindBookingByIdAsync(bookingId);
 
@@ -433,7 +393,6 @@ namespace CheckinPPP.Controllers
             var cancelledBookings = new List<CancelledBooking>();
 
             foreach (var booking in bookings)
-            {
                 cancelledBookings.Add(
                     new CancelledBooking
                     {
@@ -441,7 +400,6 @@ namespace CheckinPPP.Controllers
                         User = booking.User,
                         CancelledAt = DateTime.Now
                     });
-            }
 
             return cancelledBookings;
         }
@@ -449,7 +407,7 @@ namespace CheckinPPP.Controllers
 
         private async Task CancelBookingInsertionAsync(CancelledBooking cancelledBooking)
         {
-            _context.Add<CancelledBooking>(cancelledBooking);
+            _context.Add(cancelledBooking);
 
             await _context.SaveChangesAsync();
         }
@@ -464,7 +422,7 @@ namespace CheckinPPP.Controllers
         private object ToJsonString(object value)
         {
             return JsonConvert.SerializeObject(value, Formatting.Indented,
-                new JsonSerializerSettings()
+                new JsonSerializerSettings
                 {
                     ReferenceLoopHandling = ReferenceLoopHandling.Ignore
                 });

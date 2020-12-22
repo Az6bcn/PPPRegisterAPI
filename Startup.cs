@@ -1,28 +1,28 @@
+using System;
+using System.Linq;
+using System.Text;
+using CheckinPPP.Business;
+using CheckinPPP.Data;
+using CheckinPPP.Data.Entities;
+using CheckinPPP.Data.Queries;
+using CheckinPPP.Helpers;
+using CheckinPPP.Helpers.Extensions;
 using CheckinPPP.Hubs;
+using CheckinPPP.Models;
+using Microsoft.ApplicationInsights.Extensibility;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using CheckinPPP.Data;
 using Microsoft.Extensions.Logging;
-using System.Linq;
-using CheckinPPP.Helpers;
-using CheckinPPP.Data.Entities;
-using CheckinPPP.Business;
-using CheckinPPP.Data.Queries;
-using CheckinPPP.Models;
-using Microsoft.EntityFrameworkCore.Storage;
-using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using System.Text;
-using System;
-using CheckinPPP.Helpers.Extensions;
-using Microsoft.ApplicationInsights.Extensibility;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
@@ -43,9 +43,10 @@ namespace CheckinPPP
             var key = Encoding.ASCII.GetBytes(Configuration.GetSection("Jwt:Key").Value);
 
 
-            services.AddDbContext<ApplicationDbContext>( options =>
+            services.AddDbContext<ApplicationDbContext>(options =>
             {
-                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection"));
+                options.UseSqlServer(
+                    Configuration.GetConnectionString("DefaultConnection"));
             });
 
             services.AddIdentity<ApplicationUser, IdentityRole>()
@@ -106,7 +107,8 @@ namespace CheckinPPP
 
             // load email settings so it can be made available via DI
             services.AddOptions<MailGunApiEmailSettings>();
-            services.Configure<MailGunApiEmailSettings>(Configuration.GetSection("MailGunApiEmailSettings"));
+            services.Configure<MailGunApiEmailSettings>(
+                Configuration.GetSection("MailGunApiEmailSettings"));
 
             services.Configure<MailSettings>(Configuration.GetSection("MailSettings"));
             services.Configure<JwtOptions>(Configuration.GetSection("Jwt"));
@@ -134,34 +136,36 @@ namespace CheckinPPP
 
             // The following line enables Application Insights telemetry collection.
             services.AddApplicationInsightsTelemetry();
-            
+
             services.AddControllers()
                 .AddNewtonsoftJson(options =>
                 {
                     // all dates must be in ISODate format
                     options.SerializerSettings.DateFormatString = "yyyy-MM-ddTHH:mm:ssZ";
                     options.SerializerSettings.Formatting = Formatting.Indented;
-                    options.SerializerSettings.ReferenceLoopHandling = ReferenceLoopHandling.Ignore;
-                    options.SerializerSettings.ContractResolver = new CamelCasePropertyNamesContractResolver();
+                    options.SerializerSettings.ReferenceLoopHandling =
+                        ReferenceLoopHandling.Ignore;
+                    options.SerializerSettings.ContractResolver =
+                        new CamelCasePropertyNamesContractResolver();
                 });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, TelemetryConfiguration configuration)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env,
+            TelemetryConfiguration configuration)
         {
-            
-            
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
                 configuration.DisableTelemetry = true;
             }
-            app.UseRequestLoggerExtension();
+
             app.UseHttpsRedirection();
             app.UseRouting();
             app.UseCors("myPolicy");
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseRequestLoggerExtension();
 
             // set default homepage to index.html of the compiled Angular app
             app.UseDefaultFiles();
@@ -184,10 +188,12 @@ namespace CheckinPPP
             using (var serviceProvider = services.BuildServiceProvider())
             {
                 // create a scope where all my operations will run in.
-                using (var scope = serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope())
+                using (var scope = serviceProvider.GetRequiredService<IServiceScopeFactory>()
+                    .CreateScope())
                 {
                     // resolve the dependencies I need
-                    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    var context = scope.ServiceProvider
+                        .GetRequiredService<ApplicationDbContext>();
                     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Startup>>();
 
                     logger.LogInformation("Getting Pending Migrations");
@@ -211,12 +217,15 @@ namespace CheckinPPP
             using (var serviceProvider = services.BuildServiceProvider())
             {
                 // create a scope where all my operations will run in.
-                using (var scope = serviceProvider.GetRequiredService<IServiceScopeFactory>().CreateScope())
+                using (var scope = serviceProvider.GetRequiredService<IServiceScopeFactory>()
+                    .CreateScope())
                 {
                     // resolve the dependencies I need
-                    var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                    var context = scope.ServiceProvider
+                        .GetRequiredService<ApplicationDbContext>();
                     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Startup>>();
-                    var _seedServices = scope.ServiceProvider.GetRequiredService<ISeedServices>();
+                    var _seedServices =
+                        scope.ServiceProvider.GetRequiredService<ISeedServices>();
 
                     if (context.Database.GetService<IRelationalDatabaseCreator>().Exists())
                     {
@@ -230,19 +239,22 @@ namespace CheckinPPP
                         {
                             context.AddRange(SeedFirstService.FirstServiceBookingData());
                             context.AddRange(SeedSecondService.SeedSecondServiceBookingData());
-                            context.AddRange(SeedWorkersService.SeedWorkersServiceBookingData());
+                            context.AddRange(
+                                SeedWorkersService.SeedWorkersServiceBookingData());
 
                             context.SaveChanges();
                             logger.LogInformation("Seeded");
                         }
 
                         // seed special service:
-                        var seedSpecialService = Configuration.GetSection("SpecialServices")["SeedSpecialServices"];
+                        var seedSpecialService =
+                            Configuration.GetSection("SpecialServices")["SeedSpecialServices"];
                         var shouldSeedSpecialService = Convert.ToBoolean(seedSpecialService);
 
                         if (shouldSeedSpecialService)
                         {
-                            logger.LogInformation("Prepairing to seed special service data .....");
+                            logger.LogInformation(
+                                "Prepairing to seed special service data .....");
                             var dataToSeed = SeedSpecialService.SeedSingleSpecialService();
 
                             if (dataToSeed != null)
@@ -257,7 +269,7 @@ namespace CheckinPPP
                                     logger.LogInformation("Special service data seeded");
                                 }
 
-                                logger.LogInformation("Special service already exist");
+                                logger.LogInformation("Single special service already exist");
                             }
 
                             var datasToSeed = SeedSpecialService.SeedSpecialServices();
@@ -274,17 +286,21 @@ namespace CheckinPPP
                                     context.SaveChanges();
                                     logger.LogInformation("Special services data seeded");
                                 }
+
+                                logger.LogInformation("Special services already exist");
                             }
                         }
 
 
                         // seed 2021 services:
-                        var seed2021Service = Configuration.GetSection("SeedServices")["Seed2021Services"];
+                        var seed2021Service =
+                            Configuration.GetSection("SeedServices")["Seed2021Services"];
                         var shouldSeed2021Service = Convert.ToBoolean(seed2021Service);
 
                         if (shouldSeed2021Service)
                         {
-                            logger.LogInformation("Prepairing to seed 2021 service data .....");
+                            logger.LogInformation(
+                                "Prepairing to seed 2021 service data .....");
 
                             logger.LogInformation("Getting 2021 services...");
                             var service1 = _seedServices.FirstServiceBookingData();
@@ -308,7 +324,7 @@ namespace CheckinPPP
                                 logger.LogInformation("Seeded 2021 services");
                             }
 
-                            logger.LogInformation("Special service already exist");
+                            logger.LogInformation("2021 services already exist");
                         }
                     }
 

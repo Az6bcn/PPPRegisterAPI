@@ -11,5 +11,7 @@ namespace CheckinPPP.Helpers.Middleware
         public string Duration { get; set; }
         public string Token { get; set; }
         public string Body { get; set; }
+        public int StatusCode { get; set; }
+        public string User { get; set; }
     }
 }

@@ -8,6 +8,7 @@ namespace CheckinPPP.Helpers.Extensions
         public static IApplicationBuilder UseRequestLoggerExtension(this IApplicationBuilder builder)
         {
             return builder.UseMiddleware<RequestLoggerMiddleware>();
+            
         }
     }
 }
