@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
-using CheckinPPP.Data;
 using CheckinPPP.Data.Entities;
 using CheckinPPP.Data.Queries;
 using CheckinPPP.DTOs;
 using CheckinPPP.Helpers;
 using CheckinPPP.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace CheckinPPP.Business
 {
@@ -28,10 +25,7 @@ namespace CheckinPPP.Business
                 await _bookingQueries.GetAvailableSingleBookingsAsync(booking,
                     booking.Member.CategoryId);
 
-            if (availableBookingSlot is null)
-            {
-                return null;
-            }
+            if (availableBookingSlot is null) return null;
 
             availableBookingSlot.BookingReference = Guid.NewGuid();
             availableBookingSlot.PickUp = booking.Member.PickUp;
@@ -42,10 +36,7 @@ namespace CheckinPPP.Business
                 // find user
                 var user =
                     await _bookingQueries.FindUserByIdAsync(booking.Member.Id);
-                if (user is null)
-                {
-                    return null;
-                }
+                if (user is null) return null;
 
                 availableBookingSlot.UserId = user.Id;
             }
@@ -71,10 +62,7 @@ namespace CheckinPPP.Business
                 await _bookingQueries.GetAvailableGroupBookingsAsync(booking,
                     categoriesInGroupBooking);
 
-            if (!response.Any() || response.Count() != booking.Members.Count)
-            {
-                return (new List<Booking>(), false);
-            }
+            if (!response.Any() || response.Count() != booking.Members.Count) return (new List<Booking>(), false);
 
             // find users assigned to main user's email
             var assignedMembers =
@@ -98,10 +86,8 @@ namespace CheckinPPP.Business
 
                 return (bookingToBookSlotsFor.ToList(), true);
             }
-            else
-            {
-                users.AddRange(MapToApplicationUsers(booking));
-            }
+
+            users.AddRange(MapToApplicationUsers(booking));
 
             var bookingWithMembersAssigned =
                 AssignUsersToBookings(response, users, booking);
@@ -116,7 +102,6 @@ namespace CheckinPPP.Business
             var dto = new List<BookingDTO>();
 
             foreach (var booking in bookings)
-            {
                 dto.Add(
                     new BookingDTO
                     {
@@ -133,7 +118,6 @@ namespace CheckinPPP.Business
                         SpecialServiceName = booking.SpecialServiceName
                     }
                 );
-            }
 
             return dto;
         }
@@ -196,7 +180,7 @@ namespace CheckinPPP.Business
             var groupId = Guid.NewGuid();
             var bookingReference = Guid.NewGuid();
 
-            for (int i = 1; i <= existingUsers.Count(); i++)
+            for (var i = 1; i <= existingUsers.Count(); i++)
             {
                 response[i - 1].UserId = existingUsers[i - 1].Id;
                 response[i - 1].GroupLinkId = groupId;
@@ -285,7 +269,6 @@ namespace CheckinPPP.Business
             var users = new List<ApplicationUser>();
 
             foreach (var member in bookingDTO.Members)
-            {
                 users.Add(
                     new ApplicationUser
                     {
@@ -300,7 +283,6 @@ namespace CheckinPPP.Business
                         CategoryId = member.CategoryId
                     }
                 );
-            }
 
             return users;
         }

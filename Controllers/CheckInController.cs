@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using CheckinPPP.Data;
 using CheckinPPP.Data.Entities;
 using CheckinPPP.DTOs;
@@ -19,25 +16,24 @@ namespace CheckinPPP.Controllers
     public class CheckInController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
-        private IHubContext<PreciousPeopleHub, IPreciousPeopleClient> _hubContext { get; }
 
-        public CheckInController(ApplicationDbContext context, IHubContext<PreciousPeopleHub, IPreciousPeopleClient> hubContext)
+        public CheckInController(ApplicationDbContext context,
+            IHubContext<PreciousPeopleHub, IPreciousPeopleClient> hubContext)
         {
             _context = context;
             _hubContext = hubContext;
         }
 
+        private IHubContext<PreciousPeopleHub, IPreciousPeopleClient> _hubContext { get; }
+
         [HttpPost]
         public async Task<IActionResult> CheckIn([FromBody] CheckIn data)
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest();
-            }
+            if (!ModelState.IsValid) return BadRequest();
 
             var member = ParseToMember(data);
 
-            _context.Add<Member>(member);
+            _context.Add(member);
 
             var result = await _context.SaveChangesAsync();
 

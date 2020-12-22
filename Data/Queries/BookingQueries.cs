@@ -28,30 +28,29 @@ namespace CheckinPPP.Data.Queries
 
             if (isSpecialService) // date is saturday
             {
-
                 var startDate = new DateTime(date.Year, date.Month, date.Day).AddDays(-5);
                 var endDate = new DateTime(date.Year, date.Month, date.Day).AddDays(7);
 
                 response = await _context.Set<Booking>()
-               .Where(x => x.Date.Date >= startDate.Date && x.Date.Date <= endDate.Date
-                   && x.IsSpecialService) // saturday after the current sunday's saturday (+7) and 5 days ago
-                                          //i.e get special services happening in aprox 2 weeks period, 6 days after current sunday and 12 days before current sunday's saturday
-               .ToListAsync();
+                    .Where(x => x.Date.Date >= startDate.Date && x.Date.Date <= endDate.Date
+                                                              && x
+                                                                  .IsSpecialService) // saturday after the current sunday's saturday (+7) and 5 days ago
+                    //i.e get special services happening in aprox 2 weeks period, 6 days after current sunday and 12 days before current sunday's saturday
+                    .ToListAsync();
 
                 //response = await _context.Set<Booking>()
                 //.Where(x => x.Date.Date >= date.Date.AddDays(-12) && x.Date.Date <= date.Date
                 //    && x.IsSpecialService) // between that saturday and the monday before it
                 ////&& x.UserId == null)
                 //.ToListAsync();
-
             }
 
             else
             {
                 response = await _context.Set<Booking>()
-                .Where(x => x.Date.Date == date.Date)
-                //&& x.UserId == null)
-                .ToListAsync();
+                    .Where(x => x.Date.Date == date.Date)
+                    //&& x.UserId == null)
+                    .ToListAsync();
             }
 
 
@@ -62,9 +61,9 @@ namespace CheckinPPP.Data.Queries
         {
             var response = await _context.Set<Booking>()
                 .Where(x => x.ServiceId == serviceId
-                    && x.Date.Date == date.Date
-                    && x.Time == time
-                    && x.UserId == null)
+                            && x.Date.Date == date.Date
+                            && x.Time == time
+                            && x.UserId == null)
                 .ToListAsync();
 
             return response;
@@ -76,8 +75,8 @@ namespace CheckinPPP.Data.Queries
 
             var response = _context.Set<Booking>()
                 .Where(x => x.UserId == null
-                    && x.Date.Date == booking.Date.Date
-                    && x.Time == booking.Time);
+                            && x.Date.Date == booking.Date.Date
+                            && x.Time == booking.Time);
 
             if (category == 1)
             {
@@ -87,6 +86,7 @@ namespace CheckinPPP.Data.Queries
 
                 return fetchedBooking;
             }
+
             if (category == 2)
             {
                 fetchedBooking = await response
@@ -113,19 +113,19 @@ namespace CheckinPPP.Data.Queries
 
             var response = _context.Set<Booking>()
                 .Where(x => x.UserId == null
-                    && x.Date.Date == booking.Date.Date
-                    && x.Time == booking.Time);
+                            && x.Date.Date == booking.Date.Date
+                            && x.Time == booking.Time);
 
             var res = new List<Booking>();
             var res2 = new List<Booking>();
             var res3 = new List<Booking>();
-            
+
             // check if date is for special service where all slots is in adult:
             if (await response.AnyAsync(x => x.IsSpecialService && !x.ShowSpecialServiceSlotDetails))
             {
                 category1Count = category1Count + category2Count;
                 category1Count = category1Count + category3Count;
-                
+
                 // category 1
                 res = await response
                     .Where(x => x.IsAdultSlot)
@@ -142,17 +142,17 @@ namespace CheckinPPP.Data.Queries
 
                 // category 2
                 res2 = await response
-                   .Where(x => x.IsKidSlot)
-                   .Take(category2Count)
-                   .ToListAsync();
+                    .Where(x => x.IsKidSlot)
+                    .Take(category2Count)
+                    .ToListAsync();
 
                 // category 3
                 res3 = await response
-                   .Where(x => x.IsToddlerSlot)
-                   .Take(category3Count)
-                   .ToListAsync();
+                    .Where(x => x.IsToddlerSlot)
+                    .Take(category3Count)
+                    .ToListAsync();
             }
-            
+
             bookings.AddRange(res);
             bookings.AddRange(res2);
             bookings.AddRange(res3);
@@ -165,18 +165,14 @@ namespace CheckinPPP.Data.Queries
             var response = await _context.Set<Booking>()
                 .Include(x => x.User)
                 .Where(x => x.Id == bookingId
-                    && x.User.Email == email
-                    && x.User.Name == name
-                    && x.User.Surname == surname)
+                            && x.User.Email == email
+                            && x.User.Name == name
+                            && x.User.Surname == surname)
                 .ToListAsync();
 
-            if (response.Any())
-            {
-                return true;
-            }
+            if (response.Any()) return true;
 
             return false;
-
         }
 
         public async Task<Booking> FindBookingByIdAsync(int bookingId)
@@ -194,15 +190,15 @@ namespace CheckinPPP.Data.Queries
             var user = _context.Set<ApplicationUser>()
                 .Where(x => x.Id == userId).FirstOrDefault();
 
-            if (user is null)
-            {
-                new List<Booking>();
-            }
+            if (user is null) new List<Booking>();
 
             var response = await _context.Set<Booking>()
                 .Include(x => x.User)
                 .Where(x => x.User.Email == user.Email
-                    && x.Date >= date.Date.AddDays(-6) && x.Date <= date.Date.AddDays(7)) // include special service happening in past 6 days prior to the sunday and next 7 days after the sunday
+                            && x.Date >= date.Date.AddDays(-6) &&
+                            x.Date <= date.Date
+                                .AddDays(
+                                    7)) // include special service happening in past 6 days prior to the sunday and next 7 days after the sunday
                 .ToListAsync();
 
             return response;
@@ -236,8 +232,8 @@ namespace CheckinPPP.Data.Queries
         {
             var response = await _context.Set<Member>()
                 .FirstOrDefaultAsync(x => x.EmailAddress == email
-                && x.Name == member.Name
-                && x.Surname == member.Surname);
+                                          && x.Name == member.Name
+                                          && x.Surname == member.Surname);
 
             return response;
         }
@@ -247,7 +243,9 @@ namespace CheckinPPP.Data.Queries
             var user = await _userManager.FindByIdAsync(Id);
             return user;
         }
-        public async Task<IEnumerable<ApplicationUser>> FindUsersAssignedToMainUserInGroupBokingByEmailAsync(string email)
+
+        public async Task<IEnumerable<ApplicationUser>> FindUsersAssignedToMainUserInGroupBokingByEmailAsync(
+            string email)
         {
             var response = await _context.Set<ApplicationUser>()
                 .Where(x => x.Email == email)
@@ -269,9 +267,9 @@ namespace CheckinPPP.Data.Queries
         {
             var bookings = await _context.Set<Booking>()
                 .Where(x => x.ServiceId == serviceId
-                    && x.Date.Date == date.Date
-                    && x.Time == time
-                    && x.UserId == null)
+                            && x.Date.Date == date.Date
+                            && x.Time == time
+                            && x.UserId == null)
                 .ToListAsync();
 
             var availableBookings = bookings
@@ -298,6 +296,5 @@ namespace CheckinPPP.Data.Queries
 
             return response;
         }
-
     }
 }

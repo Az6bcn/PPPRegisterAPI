@@ -1,4 +1,5 @@
 ﻿using System;
+
 namespace CheckinPPP.DTOs
 {
     public class SignInOutResponseDTO

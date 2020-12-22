@@ -1,5 +1,4 @@
-﻿using System;
-namespace CheckinPPP.Models
+﻿namespace CheckinPPP.Models
 {
     public enum ServiceTypesEnum
     {

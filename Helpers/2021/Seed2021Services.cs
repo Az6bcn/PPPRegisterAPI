@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using CheckinPPP.Data.Entities;
 using CheckinPPP.Models;
 
@@ -22,53 +21,45 @@ namespace CheckinPPP.Helpers
             var dates = _calculateSundaysIn2021.GetSundays2021();
 
             foreach (var date in dates)
-            {
-                for (int i = 0; i <= max - 1; i++)
+                for (var i = 0; i <= max - 1; i++)
                 {
                     if (i <= 69)
-                    {
                         data.Add(
-                                new Booking
-                                {
-                                    ServiceId = (int)ServiceTypesEnum.FirstService,
-                                    Time = "10:10",
-                                    Date = date,
-                                    IsAdultSlot = true,
-                                    IsKidSlot = false,
-                                    IsToddlerSlot = false
-                                }
-                            );
-                    }
+                            new Booking
+                            {
+                                ServiceId = (int) ServiceTypesEnum.FirstService,
+                                Time = "10:10",
+                                Date = date,
+                                IsAdultSlot = true,
+                                IsKidSlot = false,
+                                IsToddlerSlot = false
+                            }
+                        );
                     if (i >= 70 && i <= 89)
-                    {
                         data.Add(
-                                new Booking
-                                {
-                                    ServiceId = (int)ServiceTypesEnum.FirstService,
-                                    Time = "10:10",
-                                    Date = date,
-                                    IsAdultSlot = false,
-                                    IsKidSlot = true,
-                                    IsToddlerSlot = false
-                                }
-                            );
-                    }
+                            new Booking
+                            {
+                                ServiceId = (int) ServiceTypesEnum.FirstService,
+                                Time = "10:10",
+                                Date = date,
+                                IsAdultSlot = false,
+                                IsKidSlot = true,
+                                IsToddlerSlot = false
+                            }
+                        );
                     if (i >= 90 && i <= 99)
-                    {
                         data.Add(
-                                new Booking
-                                {
-                                    ServiceId = (int)ServiceTypesEnum.FirstService,
-                                    Time = "10:10",
-                                    Date = date,
-                                    IsAdultSlot = false,
-                                    IsKidSlot = false,
-                                    IsToddlerSlot = true
-                                }
-                            );
-                    }
+                            new Booking
+                            {
+                                ServiceId = (int) ServiceTypesEnum.FirstService,
+                                Time = "10:10",
+                                Date = date,
+                                IsAdultSlot = false,
+                                IsKidSlot = false,
+                                IsToddlerSlot = true
+                            }
+                        );
                 }
-            }
 
             return data;
         }
@@ -82,53 +73,45 @@ namespace CheckinPPP.Helpers
             var dates = _calculateSundaysIn2021.GetSundays2021();
 
             foreach (var date in dates)
-            {
-                for (int i = 0; i <= max - 1; i++)
+                for (var i = 0; i <= max - 1; i++)
                 {
                     if (i <= 69)
-                    {
                         data.Add(
-                                new Booking
-                                {
-                                    ServiceId = (int)ServiceTypesEnum.SecondService,
-                                    Time = "11:50",
-                                    Date = date,
-                                    IsAdultSlot = true,
-                                    IsKidSlot = false,
-                                    IsToddlerSlot = false
-                                }
-                            );
-                    }
+                            new Booking
+                            {
+                                ServiceId = (int) ServiceTypesEnum.SecondService,
+                                Time = "11:50",
+                                Date = date,
+                                IsAdultSlot = true,
+                                IsKidSlot = false,
+                                IsToddlerSlot = false
+                            }
+                        );
                     if (i >= 70 && i <= 89)
-                    {
                         data.Add(
-                                new Booking
-                                {
-                                    ServiceId = (int)ServiceTypesEnum.SecondService,
-                                    Time = "11:50",
-                                    Date = date,
-                                    IsAdultSlot = false,
-                                    IsKidSlot = true,
-                                    IsToddlerSlot = false
-                                }
-                            );
-                    }
+                            new Booking
+                            {
+                                ServiceId = (int) ServiceTypesEnum.SecondService,
+                                Time = "11:50",
+                                Date = date,
+                                IsAdultSlot = false,
+                                IsKidSlot = true,
+                                IsToddlerSlot = false
+                            }
+                        );
                     if (i >= 90 && i <= 99)
-                    {
                         data.Add(
-                                new Booking
-                                {
-                                    ServiceId = (int)ServiceTypesEnum.SecondService,
-                                    Time = "11:50",
-                                    Date = date,
-                                    IsAdultSlot = false,
-                                    IsKidSlot = false,
-                                    IsToddlerSlot = true
-                                }
-                            );
-                    }
+                            new Booking
+                            {
+                                ServiceId = (int) ServiceTypesEnum.SecondService,
+                                Time = "11:50",
+                                Date = date,
+                                IsAdultSlot = false,
+                                IsKidSlot = false,
+                                IsToddlerSlot = true
+                            }
+                        );
                 }
-            }
 
             return data;
         }
@@ -142,53 +125,45 @@ namespace CheckinPPP.Helpers
             var dates = _calculateSundaysIn2021.GetSundays2021();
 
             foreach (var date in dates)
-            {
-                for (int i = 0; i <= max - 1; i++)
+                for (var i = 0; i <= max - 1; i++)
                 {
                     if (i <= 69)
-                    {
                         data.Add(
-                                new Booking
-                                {
-                                    ServiceId = (int)ServiceTypesEnum.WorkersMeeting,
-                                    Time = "08:30",
-                                    Date = date,
-                                    IsAdultSlot = true,
-                                    IsKidSlot = false,
-                                    IsToddlerSlot = false
-                                }
-                            );
-                    }
+                            new Booking
+                            {
+                                ServiceId = (int) ServiceTypesEnum.WorkersMeeting,
+                                Time = "08:30",
+                                Date = date,
+                                IsAdultSlot = true,
+                                IsKidSlot = false,
+                                IsToddlerSlot = false
+                            }
+                        );
                     if (i >= 70 && i <= 89)
-                    {
                         data.Add(
-                                new Booking
-                                {
-                                    ServiceId = (int)ServiceTypesEnum.WorkersMeeting,
-                                    Time = "08:30",
-                                    Date = date,
-                                    IsAdultSlot = false,
-                                    IsKidSlot = true,
-                                    IsToddlerSlot = false
-                                }
-                            );
-                    }
+                            new Booking
+                            {
+                                ServiceId = (int) ServiceTypesEnum.WorkersMeeting,
+                                Time = "08:30",
+                                Date = date,
+                                IsAdultSlot = false,
+                                IsKidSlot = true,
+                                IsToddlerSlot = false
+                            }
+                        );
                     if (i >= 90 && i <= 99)
-                    {
                         data.Add(
-                                new Booking
-                                {
-                                    ServiceId = (int)ServiceTypesEnum.WorkersMeeting,
-                                    Time = "08:30",
-                                    Date = date,
-                                    IsAdultSlot = false,
-                                    IsKidSlot = false,
-                                    IsToddlerSlot = true
-                                }
-                            );
-                    }
+                            new Booking
+                            {
+                                ServiceId = (int) ServiceTypesEnum.WorkersMeeting,
+                                Time = "08:30",
+                                Date = date,
+                                IsAdultSlot = false,
+                                IsKidSlot = false,
+                                IsToddlerSlot = true
+                            }
+                        );
                 }
-            }
 
             return data;
         }
