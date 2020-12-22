@@ -115,7 +115,6 @@ namespace CheckinPPP
 
             services.AddTransient<IBookingBusiness, BookingBusiness>();
             services.AddTransient<IBookingQueries, BookingQueries>();
-            services.AddTransient<ISendEmails, SendEmails>();
             services.AddTransient<IGoogleMailService, GoogleMailService>();
             services.AddTransient<IAccountBusiness, AccountBusiness>();
             services.AddTransient<ICalculateSundaysIn2021, CalculateSundaysIn2021>();

@@ -28,14 +28,12 @@ namespace CheckinPPP.Controllers
         private readonly ApplicationDbContext _context;
         private readonly IGoogleMailService _googleMailService;
         private readonly ILogger<BookingController> _logger;
-        private readonly ISendEmails _sendEmails;
 
         public BookingController(
             IBookingBusiness bookingBusiness,
             IHubContext<PreciousPeopleHub,
                 IPreciousPeopleClient> hubContext,
             IBookingQueries bookingQueries,
-            ISendEmails sendEmails,
             IGoogleMailService googleMailService,
             ApplicationDbContext context,
             ILogger<BookingController> logger
@@ -44,7 +42,6 @@ namespace CheckinPPP.Controllers
             _bookingBusiness = bookingBusiness;
             _hubContext = hubContext;
             _bookingQueries = bookingQueries;
-            _sendEmails = sendEmails;
             _googleMailService = googleMailService;
             _context = context;
             _logger = logger;
