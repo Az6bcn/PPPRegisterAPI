@@ -252,14 +252,14 @@ namespace CheckinPPP.Controllers
                         _logger.LogWarning(LogEvents.CancelBooking,
                             "Insufficient slots available for this booking. {booking}, {time}",
                             ToJsonString(booking), DateTime.UtcNow);
-                        return BadRequest("Insufficient slots available.");
+                        return BadRequest("Insufficient slots available for this booking.");
                     }
                     else
                     {
                         _logger.LogWarning(LogEvents.CancelBooking,
-                            "Could not find user. {groupBooking}, {time}",
+                            "Could not find user. {booking}, {time}",
                             ToJsonString(booking), DateTime.UtcNow);
-                        return BadRequest("Could not find user");
+                        return BadRequest("Could not find user.");
                     }
                 }
 

@@ -46,7 +46,7 @@ namespace CheckinPPP.Helpers
                     IsKidSlot = false,
                     IsToddlerSlot = false,
                     IsSpecialService = true,
-                    SpecialServiceName = "Crossover Night 2020 (11 PM - 12:00 Midnight)",
+                    SpecialServiceName = "Crossover Service 2020 (11:00 PM - 12:00 Midnight)",
                     ShowSpecialService = false,
                     ShowSpecialServiceSlotDetails = false
                 });
