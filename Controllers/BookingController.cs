@@ -238,14 +238,30 @@ namespace CheckinPPP.Controllers
             // single booking: check select booking still available or any available
             // try and book
 
-            Booking singleBooking = null;
+            Booking singleBooking;
             using var transaction = await _context.Database.BeginTransactionAsync();
             try
             {
-                singleBooking = await _bookingBusiness.SingleBookingAsync(booking);
+                var response = await _bookingBusiness.SingleBookingAsync(booking);
+                singleBooking = response.booking;
 
-
-                if (singleBooking is null) return BadRequest("Could not find user");
+                if (!response.canBook )
+                {
+                    if (response.booking.Id == -1)
+                    {
+                        _logger.LogWarning(LogEvents.CancelBooking,
+                            "Insufficient slots available for this booking. {booking}, {time}",
+                            ToJsonString(booking), DateTime.UtcNow);
+                        return BadRequest("Insufficient slots available.");
+                    }
+                    else
+                    {
+                        _logger.LogWarning(LogEvents.CancelBooking,
+                            "Could not find user. {groupBooking}, {time}",
+                            ToJsonString(booking), DateTime.UtcNow);
+                        return BadRequest("Could not find user");
+                    }
+                }
 
                 _context.UpdateRange(singleBooking);
 

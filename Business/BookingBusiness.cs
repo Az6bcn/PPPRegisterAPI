@@ -19,24 +19,24 @@ namespace CheckinPPP.Business
             _bookingQueries = bookingQueries;
         }
 
-        public async Task<Booking> SingleBookingAsync(BookingDTO booking)
+        public async Task<(Booking booking, bool canBook)> SingleBookingAsync(BookingDTO booking)
         {
             var availableBookingSlot =
-                await _bookingQueries.GetAvailableSingleBookingsAsync(booking,
-                    booking.Member.CategoryId);
+                await _bookingQueries.GetAvailableSingleBookingsAsync(booking, booking.Member.CategoryId);
 
-            if (availableBookingSlot is null) return null;
+            if (availableBookingSlot is null)
+            {
+                return (new Booking{Id = -1}, false);
+            }
 
             availableBookingSlot.BookingReference = Guid.NewGuid();
             availableBookingSlot.PickUp = booking.Member.PickUp;
 
-
             if (!string.IsNullOrWhiteSpace(booking.Member.Id))
             {
                 // find user
-                var user =
-                    await _bookingQueries.FindUserByIdAsync(booking.Member.Id);
-                if (user is null) return null;
+                var user = await _bookingQueries.FindUserByIdAsync(booking.Member.Id);
+                if (user is null) return (new Booking{Id = 0}, false);
 
                 availableBookingSlot.UserId = user.Id;
             }
@@ -47,7 +47,7 @@ namespace CheckinPPP.Business
                 availableBookingSlot.User = userToCreate;
             }
 
-            return availableBookingSlot;
+            return (availableBookingSlot, true);
         }
 
         public async Task<(List<Booking> booking, bool canBook)> GroupBookingAsync(BookingDTO booking)
@@ -62,7 +62,10 @@ namespace CheckinPPP.Business
                 await _bookingQueries.GetAvailableGroupBookingsAsync(booking,
                     categoriesInGroupBooking);
 
-            if (!response.Any() || response.Count() != booking.Members.Count) return (new List<Booking>(), false);
+            if (!response.Any() || response.Count() != booking.Members.Count)
+            {
+                return (new List<Booking>(), false);
+            }
 
             // find users assigned to main user's email
             var assignedMembers =
