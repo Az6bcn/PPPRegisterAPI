@@ -1,9 +1,7 @@
-﻿using System;
-namespace CheckinPPP.Models
+﻿namespace CheckinPPP.Models
 {
     public class MailGunApiEmailSettings
     {
-
         public string ApiKey { get; set; }
 
         public string BaseUri { get; set; }
@@ -14,5 +12,4 @@ namespace CheckinPPP.Models
 
         public string ReturnUri { get; set; }
     }
-
 }

@@ -32,13 +32,13 @@ namespace CheckinPPP.Business
         private JwtSecurityToken GetJwtSecurityTokenOptions(List<Claim> userClaims)
         {
             var token = new JwtSecurityToken(
-                issuer: _jwtOptions.Issuer,
-                audience: _jwtOptions.Audience,
-                claims: userClaims,
-                notBefore: DateTime.Now,
-                expires: DateTime.Now.AddMinutes(30),
-                signingCredentials: GetSigningCredentials()
-                );
+                _jwtOptions.Issuer,
+                _jwtOptions.Audience,
+                userClaims,
+                DateTime.Now,
+                DateTime.Now.AddMinutes(30),
+                GetSigningCredentials()
+            );
 
             return token;
         }
@@ -47,7 +47,8 @@ namespace CheckinPPP.Business
         {
             var key = Encoding.ASCII.GetBytes(_jwtOptions.Key);
 
-            var siginigCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
+            var siginigCredentials =
+                new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature);
 
             return siginigCredentials;
         }

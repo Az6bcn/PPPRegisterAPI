@@ -1,4 +1,5 @@
 ﻿using System;
+
 namespace CheckinPPP.Data.Entities
 {
     public class Member

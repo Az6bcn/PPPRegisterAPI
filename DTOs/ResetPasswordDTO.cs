@@ -1,5 +1,4 @@
-﻿using System;
-namespace CheckinPPP.DTOs
+﻿namespace CheckinPPP.DTOs
 {
     public class ResetPasswordDTO
     {

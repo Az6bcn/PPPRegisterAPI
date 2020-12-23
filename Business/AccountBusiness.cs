@@ -13,10 +13,10 @@ namespace CheckinPPP.Business
 {
     public class AccountBusiness : IAccountBusiness
     {
+        private readonly ApplicationDbContext _dbContext;
+        private readonly IJwtFactory _jwtFactory;
         private readonly SignInManager<ApplicationUser> _signInManager;
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly IJwtFactory _jwtFactory;
-        private readonly ApplicationDbContext _dbContext;
 
         public AccountBusiness(
             SignInManager<ApplicationUser> signInManager,
@@ -32,7 +32,7 @@ namespace CheckinPPP.Business
 
 
         /// <summary>
-        /// Register to use our Application
+        ///     Register to use our Application
         /// </summary>
         /// <param name="registerModel"></param>
         /// <returns></returns>
@@ -47,7 +47,8 @@ namespace CheckinPPP.Business
                 // add the users claims
                 var res = await AddUserClaims(registeredUser);
 
-                if (!res.Succeeded) { return IdentityResult.Failed(new IdentityError { Description = "User cliams not added" }); }
+                if (!res.Succeeded)
+                    return IdentityResult.Failed(new IdentityError {Description = "User cliams not added"});
             }
 
             return result;
@@ -55,7 +56,7 @@ namespace CheckinPPP.Business
 
 
         /// <summary>
-        /// Login in the user, checks if the users email has been confirmed first and if the user exists in our system.
+        ///     Login in the user, checks if the users email has been confirmed first and if the user exists in our system.
         /// </summary>
         /// <param name="loginModel"></param>
         /// <returns></returns>
@@ -65,13 +66,14 @@ namespace CheckinPPP.Business
             var user = await _userManager.FindByEmailAsync(loginModel.Email);
 
             if (user is null)
-            {
-                return IdentityResult.Failed(new IdentityError { Description = "Invalid user, register and then login." });
-            }
+                return IdentityResult.Failed(new IdentityError
+                    {Description = "Invalid user, register and then login."});
 
             var result = await SignInUser(user, loginModel);
 
-            return result.Succeeded ? IdentityResult.Success : IdentityResult.Failed(new IdentityError { Description = $"{result.ToString()}" });
+            return result.Succeeded
+                ? IdentityResult.Success
+                : IdentityResult.Failed(new IdentityError {Description = $"{result}"});
         }
 
         public async Task<UsersAndLinkedUsersDTO> GetUserAndLinkedUsers(Guid id)
@@ -80,7 +82,7 @@ namespace CheckinPPP.Business
 
             var assignedUsers = _dbContext.Users
                 .Where(x => x.Email == user.Email
-                    && x.Id != user.Id)
+                            && x.Id != user.Id)
                 .ToList();
 
             // convert ot members
@@ -90,7 +92,7 @@ namespace CheckinPPP.Business
         }
 
         /// <summary>
-        /// Generate token for successully loggedIn user
+        ///     Generate token for successully loggedIn user
         /// </summary>
         /// <param name="loginModel"></param>
         /// <returns></returns>
@@ -109,6 +111,35 @@ namespace CheckinPPP.Business
             return jwt;
         }
 
+        public async Task<ApplicationUser> FindUserAsync(string email)
+        {
+            var user = await _userManager.FindByEmailAsync(email);
+
+            return user;
+        }
+
+        public async Task<string> GeneratePasswordResetTokenAsync(ApplicationUser user)
+        {
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+
+            return token;
+        }
+
+        public async Task<bool> ValidatePasswordResetTokenAsync(ApplicationUser user, string token)
+        {
+            var isValid =
+                await _userManager.VerifyUserTokenAsync(user, TokenOptions.DefaultProvider, "ResetPassword", token);
+
+            return isValid;
+        }
+
+        public async Task<IdentityResult> ResetPasswordAsync(string newPassword, string token, ApplicationUser user)
+        {
+            var response = await _userManager.ResetPasswordAsync(user, token, newPassword);
+
+            return response;
+        }
+
         public async Task AddUsersAsync(IEnumerable<MemberDTO> members)
         {
             var errors = new List<IdentityResult>();
@@ -116,10 +147,8 @@ namespace CheckinPPP.Business
             var users = MapToApplicationUser(members);
 
             // add the users
-            foreach (var user in users)
-            {
-                await _userManager.CreateAsync(user);
-            };
+            foreach (var user in users) await _userManager.CreateAsync(user);
+            ;
         }
 
         private ApplicationUser ParseToAppUser(RegisterDTO register)
@@ -159,7 +188,6 @@ namespace CheckinPPP.Business
 
             var result = await _userManager.AddClaimsAsync(appUser, claimsList);
             return result;
-
         }
 
         private async Task<SignInResult> SignInUser(ApplicationUser appUser, LoginDTO loginModel)
@@ -168,7 +196,8 @@ namespace CheckinPPP.Business
             return result;
         }
 
-        private UsersAndLinkedUsersDTO MapToLinkedUsersDTOs(ApplicationUser mainUser, IEnumerable<ApplicationUser> linkedUsers)
+        private UsersAndLinkedUsersDTO MapToLinkedUsersDTOs(ApplicationUser mainUser,
+            IEnumerable<ApplicationUser> linkedUsers)
         {
             var response = new UsersAndLinkedUsersDTO
             {
@@ -192,7 +221,6 @@ namespace CheckinPPP.Business
             var list = new List<MemberDTO>();
 
             foreach (var user in linkedUsers)
-            {
                 list.Add(
                     new MemberDTO
                     {
@@ -203,7 +231,6 @@ namespace CheckinPPP.Business
                         Gender = user.Gender,
                         CategoryId = user.CategoryId
                     });
-            }
 
             return list;
         }
@@ -213,7 +240,6 @@ namespace CheckinPPP.Business
             var users = new List<ApplicationUser>();
 
             foreach (var member in members)
-            {
                 users.Add(
                     new ApplicationUser
                     {
@@ -225,37 +251,8 @@ namespace CheckinPPP.Business
                         UserName = member.EmailAddress,
                         PhoneNumber = member.Mobile
                     });
-            }
 
             return users;
-        }
-
-        public async Task<ApplicationUser> FindUserAsync(string email)
-        {
-            var user = await _userManager.FindByEmailAsync(email);
-
-            return user;
-        }
-
-        public async Task<string> GeneratePasswordResetTokenAsync(ApplicationUser user)
-        {
-            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-
-            return token;
-        }
-
-        public async Task<bool> ValidatePasswordResetTokenAsync(ApplicationUser user, string token)
-        {
-            var isValid = await _userManager.VerifyUserTokenAsync(user, TokenOptions.DefaultProvider, "ResetPassword", token);
-
-            return isValid;
-        }
-
-        public async Task<IdentityResult> ResetPasswordAsync(string newPassword, string token, ApplicationUser user)
-        {
-            var response = await _userManager.ResetPasswordAsync(user, token, newPassword);
-
-            return response;
         }
     }
 }

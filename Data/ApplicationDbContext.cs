@@ -1,6 +1,4 @@
-﻿
-using System.Security.Cryptography.X509Certificates;
-using CheckinPPP.Data.Entities;
+﻿using CheckinPPP.Data.Entities;
 using CheckinPPP.Models;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -9,15 +7,13 @@ namespace CheckinPPP.Data
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
-
         }
 
-        DbSet<Member> Members { get; set; }
-        DbSet<Booking> Bookings { get; set; }
-        DbSet<CancelledBooking> CancelledBookings { get; set; }
+        private DbSet<Member> Members { get; set; }
+        private DbSet<Booking> Bookings { get; set; }
+        private DbSet<CancelledBooking> CancelledBookings { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -34,10 +30,9 @@ namespace CheckinPPP.Data
                 .HasForeignKey(x => x.UserId);
 
             builder.Entity<CancelledBooking>()
-               .HasOne(x => x.User)
-               .WithMany(y => y.CancelledBookings)
-               .HasForeignKey(x => x.UserId);
+                .HasOne(x => x.User)
+                .WithMany(y => y.CancelledBookings)
+                .HasForeignKey(x => x.UserId);
         }
-
     }
 }

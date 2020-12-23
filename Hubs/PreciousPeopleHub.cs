@@ -1,12 +1,12 @@
-﻿using CheckinPPP.Data;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using CheckinPPP.Data;
 using CheckinPPP.Data.Entities;
 using CheckinPPP.DTOs;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace CheckinPPP.Hubs
 {
@@ -14,6 +14,7 @@ namespace CheckinPPP.Hubs
     public class PreciousPeopleHub : Hub<IPreciousPeopleClient>
     {
         private readonly ApplicationDbContext _context;
+
         public PreciousPeopleHub(ApplicationDbContext context)
         {
             _context = context;
@@ -29,8 +30,8 @@ namespace CheckinPPP.Hubs
         {
             var bookings = await _context.Set<Booking>()
                 .Where(x => x.ServiceId == serviceId
-                    && x.Date.Date == date.Date
-                    && x.Time == time)
+                            && x.Date.Date == date.Date
+                            && x.Time == time)
                 .ToListAsync();
 
             var availableBookings = bookings
@@ -53,7 +54,6 @@ namespace CheckinPPP.Hubs
 
         public async Task UpdateSlotsAvailable(DateTime date)
         {
-
             await Clients.All.UpdateSlotsAvailableAsync(date);
         }
 
@@ -62,7 +62,6 @@ namespace CheckinPPP.Hubs
             var dto = new List<BookingDTO>();
 
             foreach (var booking in bookings)
-            {
                 dto.Add(
                     new BookingDTO
                     {
@@ -72,7 +71,6 @@ namespace CheckinPPP.Hubs
                         Time = booking.Time
                     }
                 );
-            }
 
             return dto;
         }

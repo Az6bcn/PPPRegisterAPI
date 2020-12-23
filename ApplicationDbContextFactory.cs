@@ -11,12 +11,13 @@ namespace CheckinPPP
     {
         public ApplicationDbContext CreateDbContext(string[] args)
         {
-            IConfigurationRoot configuration = new ConfigurationBuilder()
-            .SetBasePath(Directory.GetCurrentDirectory())
-            .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-            .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", optional: true, reloadOnChange: true)
-            .AddEnvironmentVariables()
-            .Build();
+            var configuration = new ConfigurationBuilder()
+                .SetBasePath(Directory.GetCurrentDirectory())
+                .AddJsonFile("appsettings.json", true, true)
+                .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", true,
+                    true)
+                .AddEnvironmentVariables()
+                .Build();
 
             var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
 
@@ -26,6 +27,5 @@ namespace CheckinPPP
 
             return new ApplicationDbContext(builder.Options);
         }
-
     }
 }

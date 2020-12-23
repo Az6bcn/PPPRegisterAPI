@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Web;
 using CheckinPPP.Models;
 
 namespace CheckinPPP.Data.Entities
