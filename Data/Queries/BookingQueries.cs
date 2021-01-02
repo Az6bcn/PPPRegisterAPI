@@ -48,7 +48,7 @@ namespace CheckinPPP.Data.Queries
             else
             {
                 response = await _context.Set<Booking>()
-                    .Where(x => x.Date.Date == date.Date)
+                    .Where(x => x.Date.Date == date.Date && x.ShowSundayService)
                     //&& x.UserId == null)
                     .ToListAsync();
             }
