@@ -27,5 +27,6 @@ namespace CheckinPPP.Data.Entities
         public bool ShowSpecialServiceSlotDetails { get; set; }
         public string ShowSpecialAnnouncement { get; set; }
         public string SpecialServiceYoutubeUrl { get; set; }
+        public bool ShowSundayService { get; set; }
     }
 }
