@@ -178,6 +178,17 @@ namespace CheckinPPP.Controllers
                 .Where(x => x.Date == date.Date)
                 .ToListAsync();
 
+            var isSpecialService = result?.FirstOrDefault()?.IsSpecialService;
+
+            if (isSpecialService.HasValue && isSpecialService.Value)
+            {
+                result = result.Where(x => x.ShowSpecialService).ToList();
+            }
+            else
+            {
+                result = result.Where(x => x.ShowSundayService).ToList();
+            }
+
             var groupedResult = result.GroupBy(x => x.ServiceId)
                 .Select(x => new
                 {
