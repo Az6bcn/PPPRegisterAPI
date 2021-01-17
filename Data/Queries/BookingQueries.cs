@@ -269,7 +269,8 @@ namespace CheckinPPP.Data.Queries
                 .Where(x => x.ServiceId == serviceId
                             && x.Date.Date == date.Date
                             && x.Time == time
-                            && x.UserId == null)
+                            && x.UserId == null
+                            && x.ShowSpecialService)
                 .ToListAsync();
 
             var availableBookings = bookings
