@@ -270,7 +270,7 @@ namespace CheckinPPP.Data.Queries
                             && x.Date.Date == date.Date
                             && x.Time == time
                             && x.UserId == null
-                            && x.ShowSpecialService)
+                            && x.ShowSundayService)
                 .ToListAsync();
 
             var availableBookings = bookings
