@@ -208,7 +208,8 @@ namespace CheckinPPP.Controllers
 
             var response = new
             {
-                groupedResult, total
+                groupedResult,
+                total
             };
 
             return Ok(response);
@@ -222,18 +223,19 @@ namespace CheckinPPP.Controllers
                 checkedInMembers.Add(
                     new CheckedInMemberDTO
                     {
-                        Id = booking.Id,
-                        Name = booking.User.Name,
-                        Surname = booking.User.Surname,
-                        Mobile = booking.User.PhoneNumber,
-                        ServiceId = booking.ServiceId,
-                        SignedIn = booking.SignIn,
-                        SignedOut = booking.SignOut,
-                        Date = booking.Date,
-                        Time = booking.Time,
-                        PickUp = booking.PickUp,
-                        Gender = booking.User.Gender
+                        Id = (int)booking?.Id,
+                        Name = booking?.User?.Name,
+                        Surname = booking?.User?.Surname,
+                        Mobile = booking?.User?.PhoneNumber,
+                        ServiceId = (int)booking?.ServiceId,
+                        SignedIn = booking?.SignIn,
+                        SignedOut = booking?.SignOut,
+                        Date = (DateTime)booking?.Date,
+                        Time = booking?.Time,
+                        PickUp = (bool)booking?.PickUp,
+                        Gender = booking?.User?.Gender
                     });
+
             return checkedInMembers;
         }
 
@@ -247,7 +249,7 @@ namespace CheckinPPP.Controllers
                 response = new SignInOutResponseDTO
                 {
                     Id = booking.Id,
-                    Date = (DateTime) booking.SignIn
+                    Date = (DateTime)booking.SignIn
                 };
 
                 return response;
@@ -256,7 +258,7 @@ namespace CheckinPPP.Controllers
             response = new SignInOutResponseDTO
             {
                 Id = booking.Id,
-                Date = (DateTime) booking.SignOut
+                Date = (DateTime)booking.SignOut
             };
 
             return response;
