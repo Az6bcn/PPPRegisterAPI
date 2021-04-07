@@ -7,6 +7,7 @@ using CheckinPPP.Data.Queries;
 using CheckinPPP.DTOs;
 using CheckinPPP.Helpers;
 using CheckinPPP.Models;
+using Microsoft.VisualBasic;
 
 namespace CheckinPPP.Business
 {
@@ -78,7 +79,7 @@ namespace CheckinPPP.Business
                 var mainUser =
                     assignedMembers.FirstOrDefault(x => x.PasswordHash != null);
 
-                /// check if all the passed in members are in it
+                // check if all the passed in members are in it
                 var res = GetAllMemebersInExistingGroupEmail(assignedMembers,
                     MapToApplicationUsers(booking, mainUser).ToList());
 
@@ -149,7 +150,6 @@ namespace CheckinPPP.Business
             return isValidBooking;
         }
 
-
         private IEnumerable<Booking> AssignUsersToBookings(
             IEnumerable<Booking> response, List<ApplicationUser> users,
             BookingDTO booking)
@@ -164,9 +164,8 @@ namespace CheckinPPP.Business
                 _booking.GroupLinkId = groupId;
                 _booking.BookingReference = bookingReference;
                 _booking.PickUp = booking.Members
-                    .Where(x => x.Name == users[i].Name
-                                && x.Surname == users[i].Surname)
-                    .First().PickUp;
+                    .First(x => x.Name == users[i].Name
+                                && x.Surname == users[i].Surname).PickUp;
 
                 i++;
             }

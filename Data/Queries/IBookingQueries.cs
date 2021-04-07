@@ -26,5 +26,7 @@ namespace CheckinPPP.Data.Queries
         Task<IdentityResult> CreateUserAsnc(ApplicationUser user);
         Task<IEnumerable<ApplicationUser>> FindUsersAssignedToMainUserInGroupBokingByEmailAsync(string email);
         Task<IEnumerable<Booking>> FindBookingByUserAndDateAsync(string userId, DateTime date);
+        Task<IEnumerable<Booking>> GetBookingsForDateByTime(DateTime date, string time, int numberSlot);
+        Task<IEnumerable<Booking>> GetBookingsForDateByTime(DateTime date, List<string> times, int numberSlot);
     }
 }

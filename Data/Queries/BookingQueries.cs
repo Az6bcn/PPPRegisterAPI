@@ -297,5 +297,35 @@ namespace CheckinPPP.Data.Queries
 
             return response;
         }
+
+        public async Task<IEnumerable<Booking>> GetBookingsForDateByTime(DateTime date, string time, int numberSlot)
+        {
+            var response = await  _context.Set<Booking>()
+                .Where(b => b.Date == date 
+                            && b.Time == time 
+                            && b.UserId == null 
+                            && b.BookingReference == null 
+                            && b.IsAdultSlot 
+                            && b.ShowSundayService)
+                .Take(numberSlot)
+                .ToListAsync();
+
+            return response;
+        }
+        
+        public async Task<IEnumerable<Booking>> GetBookingsForDateByTime(DateTime date, List<string> times, int numberSlot)
+        {
+            var response = await  _context.Set<Booking>()
+                .Where(b => b.Date == date 
+                            && times.Contains(b.Time) 
+                            && b.UserId == null 
+                            && b.BookingReference == null 
+                            && b.IsAdultSlot 
+                            && b.ShowSundayService)
+                .Take(numberSlot)
+                .ToListAsync();
+
+            return response;
+        }
     }
 }

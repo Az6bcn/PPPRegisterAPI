@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CheckinPPP.Data;
 using CheckinPPP.Data.Entities;
+using CheckinPPP.Data.Queries;
 using CheckinPPP.DTOs;
 using CheckinPPP.Hubs;
 using Microsoft.AspNetCore.Mvc;
@@ -17,13 +18,16 @@ namespace CheckinPPP.Controllers
     public class CheckedInmembersController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IBookingQueries _bookingQueries;
 
         public CheckedInmembersController(
             ApplicationDbContext context,
-            IHubContext<PreciousPeopleHub,
-                IPreciousPeopleClient> hubContext)
+            IHubContext<PreciousPeopleHub, 
+            IPreciousPeopleClient> hubContext,
+            IBookingQueries bookingQueries)
         {
             _context = context;
+            _bookingQueries = bookingQueries;
             _hubContext = hubContext;
         }
 
@@ -194,16 +198,16 @@ namespace CheckinPPP.Controllers
                 {
                     ServiceId = x.Key,
                     Total = x.Select(y => y.ServiceId == x.Key).Count(),
-                    Attended = x.Where(y => y.ServiceId == x.Key
-                                            && y.SignIn != null).Count()
+                    Attended = x.Count(y => y.ServiceId == x.Key
+                                            && y.SignIn != null)
                 })
                 .ToList();
 
             var total = new
             {
                 TotalSlots = result.Count(),
-                TotalSlotsBooked = result.Where(x => x.BookingReference != null).Count(),
-                TotalAttended = result.Where(x => x.SignIn != null).Count()
+                TotalSlotsBooked = result.Count(x => x.BookingReference != null),
+                TotalAttended = result.Count(x => x.SignIn != null)
             };
 
             var response = new
@@ -211,6 +215,48 @@ namespace CheckinPPP.Controllers
                 groupedResult,
                 total
             };
+
+            return Ok(response);
+        }
+
+        [HttpGet("slots/resize/{numberSlots}")]
+        public async Task<IActionResult> ResizeSlot(int numberSlots)
+        {
+            var date = DateTime.UtcNow; 
+            var nextSunday = date.AddDays(8).Date;
+
+            if (nextSunday.Month != DateTime.UtcNow.Month)
+            {
+                // new month's 1st sunday: Thanksgiving
+                var thanksgivingResponse = new SlotResizeResponseDto()
+                {
+                    Resized = false,
+                    IsThanksgivingSunday = true
+                };
+
+                return Ok(thanksgivingResponse);
+            }
+            
+            var times = new List<string> {"08:30", "10:10", "11:50"};
+            var bookingsToMakeUnavailable =
+                await _bookingQueries.GetBookingsForDateByTime(nextSunday, times, numberSlots);
+            
+            bookingsToMakeUnavailable.ToList().ForEach(booking => booking.ShowSundayService = true);
+
+            _context.UpdateRange(bookingsToMakeUnavailable);
+            var updatedCount = await _context.SaveChangesAsync();
+
+            var response = updatedCount > 0
+                ? new SlotResizeResponseDto()
+                {
+                    Resized = true,
+                    IsThanksgivingSunday = false
+                }
+                : new SlotResizeResponseDto()
+                {
+                    Resized = false,
+                    IsThanksgivingSunday = false
+                };
 
             return Ok(response);
         }
