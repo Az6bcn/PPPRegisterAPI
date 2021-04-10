@@ -35,7 +35,7 @@ namespace CheckinPPP.Data.Queries
                     .Where(x => x.Date.Date >= startDate.Date && x.Date.Date <= endDate.Date
                                                               && x
                                                                   .IsSpecialService) // saturday after the current sunday's saturday (+7) and 5 days ago
-                    //i.e get special services happening in aprox 2 weeks period, 6 days after current sunday and 12 days before current sunday's saturday
+                                                                                     //i.e get special services happening in aprox 2 weeks period, 6 days after current sunday and 12 days before current sunday's saturday
                     .ToListAsync();
 
                 //response = await _context.Set<Booking>()
@@ -300,30 +300,38 @@ namespace CheckinPPP.Data.Queries
 
         public async Task<IEnumerable<Booking>> GetBookingsForDateByTime(DateTime date, string time, int numberSlot)
         {
-            var response = await  _context.Set<Booking>()
-                .Where(b => b.Date == date 
-                            && b.Time == time 
-                            && b.UserId == null 
-                            && b.BookingReference == null 
-                            && b.IsAdultSlot 
+            var response = await _context.Set<Booking>()
+                .Where(b => b.Date == date
+                            && b.Time == time
+                            && b.UserId == null
+                            && b.BookingReference == null
+                            && b.IsAdultSlot
                             && b.ShowSundayService)
                 .Take(numberSlot)
                 .ToListAsync();
 
             return response;
         }
-        
+
         public async Task<IEnumerable<Booking>> GetBookingsForDateByTime(DateTime date, List<string> times, int numberSlot)
         {
-            var response = await  _context.Set<Booking>()
-                .Where(b => b.Date == date 
-                            && times.Contains(b.Time) 
-                            && b.UserId == null 
-                            && b.BookingReference == null 
-                            && b.IsAdultSlot 
+            var response = new List<Booking>();
+
+            var result = await _context.Set<Booking>()
+                .Where(b => b.Date == date
+                            && times.Contains(b.Time)
+                            && b.UserId == null
+                            && b.BookingReference == null
+                            && b.IsAdultSlot
                             && b.ShowSundayService)
-                .Take(numberSlot)
                 .ToListAsync();
+
+            var groupedResult = result.GroupBy(x => x.Time);
+
+            foreach (var group in groupedResult)
+            {
+                response.AddRange(group.Take(numberSlot));
+            }
 
             return response;
         }

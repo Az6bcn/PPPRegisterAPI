@@ -22,7 +22,7 @@ namespace CheckinPPP.Controllers
 
         public CheckedInmembersController(
             ApplicationDbContext context,
-            IHubContext<PreciousPeopleHub, 
+            IHubContext<PreciousPeopleHub,
             IPreciousPeopleClient> hubContext,
             IBookingQueries bookingQueries)
         {
@@ -222,7 +222,7 @@ namespace CheckinPPP.Controllers
         [HttpGet("slots/resize/{numberSlots}")]
         public async Task<IActionResult> ResizeSlot(int numberSlots)
         {
-            var date = DateTime.UtcNow; 
+            var date = DateTime.UtcNow;
             var nextSunday = date.AddDays(8).Date;
 
             if (nextSunday.Month != DateTime.UtcNow.Month)
@@ -236,12 +236,12 @@ namespace CheckinPPP.Controllers
 
                 return Ok(thanksgivingResponse);
             }
-            
-            var times = new List<string> {"08:30", "10:10", "11:50"};
+
+            var times = new List<string> { "08:30", "10:10", "11:50" };
             var bookingsToMakeUnavailable =
                 await _bookingQueries.GetBookingsForDateByTime(nextSunday, times, numberSlots);
-            
-            bookingsToMakeUnavailable.ToList().ForEach(booking => booking.ShowSundayService = true);
+
+            bookingsToMakeUnavailable.ToList().ForEach(booking => booking.ShowSundayService = false);
 
             _context.UpdateRange(bookingsToMakeUnavailable);
             var updatedCount = await _context.SaveChangesAsync();
