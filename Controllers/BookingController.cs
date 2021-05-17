@@ -123,7 +123,7 @@ namespace CheckinPPP.Controllers
                 }).ToList();
 
             _logger.LogWarning(LogEvents.Booking,
-                       "Grouped {first}", ToJsonString(grouped), DateTime.UtcNow);
+                       "Grouped {first}, {second}", ToJsonString(grouped), DateTime.UtcNow);
 
             var first = grouped.FirstOrDefault(x => x.Time == "08:30");
             var second = grouped.FirstOrDefault(x => x.Time == "10:10");
@@ -131,7 +131,7 @@ namespace CheckinPPP.Controllers
 
             _logger.LogWarning(LogEvents.Booking,
                        "Select from Grouped {first}, {second}, {third}",
-                       ToJsonString(availableBookings), DateTime.UtcNow);
+                       ToJsonString(first), ToJsonString(second), ToJsonString(third), DateTime.UtcNow);
 
             var orderGrouped = new List<SlotDTO>();
             if (first != null) orderGrouped.Add(first);
