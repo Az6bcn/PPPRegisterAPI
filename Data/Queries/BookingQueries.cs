@@ -76,7 +76,8 @@ namespace CheckinPPP.Data.Queries
             var response = _context.Set<Booking>()
                 .Where(x => x.UserId == null
                             && x.Date.Date == booking.Date.Date
-                            && x.Time == booking.Time);
+                            && x.Time == booking.Time
+                            && x.ShowSpecialService);
 
             if (category == 1)
             {

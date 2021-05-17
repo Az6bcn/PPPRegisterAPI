@@ -65,11 +65,11 @@ namespace CheckinPPP.Controllers
         {
             var booking = await _bookingQueries.FindBookingByIdAsync(bookingId);
 
-            if (booking.UserId is null) return Ok(new {cancellable = false});
+            if (booking.UserId is null) return Ok(new { cancellable = false });
 
             var availableBookingsDTO = _bookingBusiness.MapToBookingDTO(booking, 1);
 
-            return Ok(new {cancellable = true, data = availableBookingsDTO});
+            return Ok(new { cancellable = true, data = availableBookingsDTO });
         }
 
         [HttpGet("user/{userId}/{date}")]
@@ -78,7 +78,7 @@ namespace CheckinPPP.Controllers
         {
             var booking = await _bookingQueries.FindBookingByUserAndDateAsync(userId, date);
 
-            if (!booking.Any()) return Ok(new {hasBooking = false, data = new BookingDTO()});
+            if (!booking.Any()) return Ok(new { hasBooking = false, data = new BookingDTO() });
 
             var availableBookingsDTO = _bookingBusiness.MapToBookingDTOs(booking)
                 .GroupBy(x => x.Time)
@@ -95,9 +95,9 @@ namespace CheckinPPP.Controllers
                 });
             ;
 
-            if (!availableBookingsDTO.Any()) return Ok(new {hasBooking = false, data = new BookingDTO()});
+            if (!availableBookingsDTO.Any()) return Ok(new { hasBooking = false, data = new BookingDTO() });
 
-            return Ok(new {hasBooking = true, data = availableBookingsDTO});
+            return Ok(new { hasBooking = true, data = availableBookingsDTO });
         }
 
         [HttpGet("{date}")]
@@ -112,12 +112,9 @@ namespace CheckinPPP.Controllers
                 {
                     ServiceId = x.Key,
                     Time = x.Select(y => y.Time).FirstOrDefault(),
-                    AdultsAvailableSlots = x.Where(y => y.IsAdultSlot).Count() -
-                                           x.Where(y => y.IsAdultSlot && y.UserId != null).Count(),
-                    KidsAvailableSlots = x.Where(y => y.IsKidSlot).Count() -
-                                         x.Where(y => y.IsKidSlot && y.UserId != null).Count(),
-                    ToddlersAvailableSlots = x.Where(y => y.IsToddlerSlot).Count() -
-                                             x.Where(y => y.IsToddlerSlot && y.UserId != null).Count(),
+                    AdultsAvailableSlots = x.Count(x => x.IsAdultSlot && x.BookingReference == null && x.UserId == null),
+                    KidsAvailableSlots = x.Count(x => x.IsKidSlot && x.BookingReference == null && x.UserId == null),
+                    ToddlersAvailableSlots = x.Count(x => x.IsToddlerSlot && x.BookingReference == null && x.UserId == null),
                     ServiceName = "Sunday Service"
                 }).ToList();
 
@@ -245,7 +242,7 @@ namespace CheckinPPP.Controllers
                 var response = await _bookingBusiness.SingleBookingAsync(booking);
                 singleBooking = response.booking;
 
-                if (!response.canBook )
+                if (!response.canBook)
                 {
                     if (response.booking.Id == -1)
                     {
@@ -350,7 +347,7 @@ namespace CheckinPPP.Controllers
         {
             if (booking.GroupLinkId != null)
             {
-                var groupBookings = await _bookingQueries.FindBookingsByGoupLinkIdAsync((Guid) booking.GroupLinkId);
+                var groupBookings = await _bookingQueries.FindBookingsByGoupLinkIdAsync((Guid)booking.GroupLinkId);
                 await CancelInsertions(null, groupBookings);
 
                 foreach (var _booking in groupBookings)
