@@ -106,6 +106,10 @@ namespace CheckinPPP.Controllers
         {
             var availableBookings = await _bookingQueries.GetAvailableBookingsAsync(date);
 
+            _logger.LogWarning(LogEvents.Booking,
+                       "Getting Booking {groupBooking}, {time}",
+                       ToJsonString(availableBookings), DateTime.UtcNow);
+
             var grouped = availableBookings
                 .GroupBy(x => x.ServiceId)
                 .Select(x => new SlotDTO
