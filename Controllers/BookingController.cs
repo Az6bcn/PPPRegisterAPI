@@ -122,9 +122,16 @@ namespace CheckinPPP.Controllers
                     ServiceName = "Sunday Service"
                 }).ToList();
 
+            _logger.LogWarning(LogEvents.Booking,
+                       "Grouped {first}", ToJsonString(grouped), DateTime.UtcNow);
+
             var first = grouped.FirstOrDefault(x => x.Time == "08:30");
             var second = grouped.FirstOrDefault(x => x.Time == "10:10");
             var third = grouped.FirstOrDefault(x => x.Time == "11:50");
+
+            _logger.LogWarning(LogEvents.Booking,
+                       "Select from Grouped {first}, {second}, {third}",
+                       ToJsonString(availableBookings), DateTime.UtcNow);
 
             var orderGrouped = new List<SlotDTO>();
             if (first != null) orderGrouped.Add(first);
