@@ -74,10 +74,10 @@ namespace CheckinPPP.Data.Queries
             Booking fetchedBooking;
 
             var response = _context.Set<Booking>()
-                .Where(x => x.UserId == null
-                            && x.Date.Date == booking.Date.Date
+                .Where(x => x.Date.Date == booking.Date.Date
+                            && x.UserId == null
                             && x.Time == booking.Time
-                            && x.ShowSpecialService);
+                            && x.ShowSundayService);
 
             if (category == 1)
             {
